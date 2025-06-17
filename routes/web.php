@@ -9,6 +9,7 @@ use App\Models\CodigoTratamiento;
 use App\Models\CodigoGES;
 use App\Models\QuimioterapiaConcominante;
 
+use App\Http\Controllers\RegistroTratamientoRadioterapiaController;
 Route::get('/', function () {
     return view('home');
 });
@@ -31,3 +32,5 @@ Route::get('/registroTratamientoRadioterapia', function () {
         'quimioterapias'
     ));
 });
+
+Route::post('/registroTratamientoRadioterapia', [RegistroTratamientoRadioterapiaController::class, 'store'])->name('registro-tratamiento.store');
