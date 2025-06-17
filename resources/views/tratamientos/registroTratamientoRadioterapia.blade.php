@@ -3,8 +3,13 @@
 @section('content')
 <div class="container">
     <h2 class="mb-4">Registrar Tratamiento Radioterapia</h2>
+@if(session('success'))
+    <div class="alert alert-success">
+        {{ session('success') }}
+    </div>
+@endif
 
-    <form method="GET">
+    <form method="POST" action="{{ route('registro-tratamiento.store') }}">        
         @csrf
 
         {{-- Fila 1: Relaciones principales (4 cols) --}}
@@ -77,8 +82,8 @@
             </div>
 
             <div class="col-md-6 col-lg-3">
-                <label for="id_quimioterapia" class="form-label">Quimioterapia</label>
-                <select name="id_quimioterapia" id="id_quimioterapia" class="form-select">
+                <label for="id_quimioterapia_concominante" class="form-label">Quimioterapia</label>
+                <select name="id_quimioterapia_concominante" id="id_quimioterapia_concominante" class="form-select">
                     <option></option>
                     @foreach($quimioterapias as $quimio)
                         <option value="{{ $quimio->id_quimioterapia_concominante }}">{{ $quimio->nombre }}</option>
@@ -97,14 +102,6 @@
         </div>
         {{-- Fila 3: Sesiones e intención --}}
         <div class="row mb-3">
-            <div class="col-md-6 col-lg-3">
-                <label for="servicio" class="form-label">Servicio</label>
-                <select class="form-select" disabled>
-                    <option selected>Radioterapia</option>
-                </select>
-                <input type="hidden" name="servicio" value="Radioterapia">
-                <x-input-error :messages="$errors->get('servicio')" class="mt-2" />
-            </div>
 
             <div class="col-md-6 col-lg-3">
                 <label for="n_sesiones_programadas" class="form-label">Sesiones Programadas</label>
