@@ -34,3 +34,8 @@ Route::get('/registroTratamientoRadioterapia', function () {
 });
 
 Route::post('/registroTratamientoRadioterapia', [RegistroTratamientoRadioterapiaController::class, 'store'])->name('registro-tratamiento.store');
+
+
+Route::get('/gestionCasosOncologicos', function () {
+    return view('gestionOncologica.gestionCasosOncologicos');
+})->name('gestionCasosOncologicos');
