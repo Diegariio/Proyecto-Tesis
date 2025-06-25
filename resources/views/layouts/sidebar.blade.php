@@ -3,11 +3,18 @@
         <div class="nav">
             <div class="sb-sidenav-menu-heading">Menú</div>
 
-            <a class="nav-link text-light text-opacity-75">
+            <a href="{{ url('/registroTratamientoRadioterapia') }}" class="nav-link text-light text-opacity-75">
                 <div class="sb-nav-link-icon">
-                    <i class="fas fa-home"></i>
+                    <i class="fa-solid fa-laptop-medical"></i>
                 </div>
                 Registro Tratamiento Radioterapia
+            </a>
+
+            <a href="{{ url('/gestionCasosOncologicos') }}" class="nav-link text-light text-opacity-75">
+                <div class="sb-nav-link-icon">
+                    <i class="fas fa-notes-medical"></i>
+                </div>
+                Gestión Casos Oncológicos
             </a>
 
         </div>
