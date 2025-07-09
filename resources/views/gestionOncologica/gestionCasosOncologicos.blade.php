@@ -72,78 +72,66 @@
                     <!-- Estado del requerimiento -->
                     <div class="col-md-3 mb-3">
                       <label for="categoria" class="form-label">Estado Requerimiento</label>
-                      <select id="categoria" name="categoria" class="form-select">
-                        <option value="">Seleccionar estado</option>
-                        <option value="urgente">Cerrado</option>
-                        <option value="normal">Activo sin gestiones</option>
-                        <option value="baja">Activo con gestiones</option>
-                      </select>
+                        <select id="estado" name="estado" class="form-select">
+                          <option value="">Seleccionar estado</option>
+                          @foreach($estados as $estado)
+                            <option value="{{ $estado->id_estado_proceso }}">{{ $estado->estado_proceso }}</option>
+                          @endforeach
+                        </select>
                     </div>
                     <!-- Categoría -->
                     <div class="col-md-3 mb-3">
                       <label for="categoria" class="form-label">Categoría</label>
-                      <select id="categoria" name="categoria" class="form-select">
-                        <option value="">Seleccionar categoría</option>
-                        <option value="urgente">Urgente</option>
-                        <option value="normal">Normal</option>
-                        <option value="baja">Baja prioridad</option>
-                      </select>
+                        <select id="categoria" name="categoria" class="form-select">
+                          <option value="">Seleccionar categoría</option>
+                          @foreach($categorias as $categoria)
+                            <option value="{{ $categoria->id_categoria }}">{{ $categoria->tipo_categoria }}</option>
+                          @endforeach
+                        </select>
                     </div>
 
                     <!-- CIE 10 -->
                     <div class="col-md-3 mb-3">
                       <label for="cie10" class="form-label">CIE 10</label>
-                      <select id="cie10" name="cie10" class="form-select">
-                        <option value="">Seleccionar CIE 10</option>
-                        <option value="A00">A00 - Cólera</option>
-                        <option value="A01">A01 - Fiebres tifoidea y paratifoidea</option>
-                        <option value="A02">A02 - Otras infecciones por Salmonella</option>
-                        <option value="B00">B00 - Infecciones por virus del herpes</option>
-                        <option value="C00">C00 - Tumor maligno del labio</option>
-                        <option value="D00">D00 - Carcinoma in situ de la cavidad bucal</option>
-                        <option value="E00">E00 - Síndrome de deficiencia congénita de yodo</option>
-                        <option value="F00">F00 - Demencia en la enfermedad de Alzheimer</option>
-                      </select>
+                        <select id="cie10" name="cie10" class="form-select">
+                          <option value="">Seleccionar CIE 10</option>
+                          @foreach($cie10 as $codigo)
+                            <option value="{{ $codigo->id_codigo }}">{{ $codigo->codigo }} - {{ $codigo->descripcion }}</option>
+                          @endforeach
+                        </select>
                     </div>
 
                     <!-- Emisor del requerimiento -->
                     <div class="col-md-3 mb-3">
                       <label for="emisor" class="form-label">Emisor del requerimiento</label>
-                      <select id="emisor" name="emisor" class="form-select">
-                        <option value="">Seleccionar emisor</option>
-                        <option value="medico-tratante">Médico Tratante</option>
-                        <option value="especialista">Especialista</option>
-                        <option value="enfermeria">Enfermería</option>
-                        <option value="administracion">Administración</option>
-                        <option value="comite-medico">Comité Médico</option>
-                      </select>
+                        <select id="emisor" name="emisor" class="form-select">
+                          <option value="">Seleccionar emisor</option>
+                          @foreach($emisores as $emisor)
+                            <option value="{{ $emisor->id_emisor }}">{{ $emisor->emisor }}</option>
+                          @endforeach
+                        </select>
                     </div>
 
                     <!-- Entidad que resuelve -->
                     <div class="col-md-3 mb-3">
                       <label for="entidad-resuelve" class="form-label">Entidad que resuelve</label>
-                      <select id="entidad-resuelve" name="entidad-resuelve" class="form-select">
-                        <option value="">Seleccionar entidad</option>
-                        <option value="comite-farmacia">Comité de Farmacia</option>
-                        <option value="comite-medico">Comité Médico</option>
-                        <option value="direccion-medica">Dirección Médica</option>
-                        <option value="gerencia">Gerencia</option>
-                        <option value="auditoria-medica">Auditoría Médica</option>
-                      </select>
+                        <select id="entidad" name="entidad" class="form-select">
+                          <option value="">Seleccionar entidad</option>
+                          @foreach($entidades as $entidad)
+                            <option value="{{ $entidad->id_entidad }}">{{ $entidad->catalogo }}</option>
+                          @endforeach
+                        </select>
                     </div>
 
                     <!-- Requerimiento -->
                     <div class="col-md-3 mb-3">
                       <label for="requerimiento" class="form-label">Requerimiento</label>
-                      <select id="requerimiento" name="requerimiento" class="form-select">
-                        <option value="">Seleccionar requerimiento</option>
-                        <option value="medicamento">Solicitud de medicamento</option>
-                        <option value="procedimiento">Autorización de procedimiento</option>
-                        <option value="interconsulta">Interconsulta</option>
-                        <option value="examenes">Exámenes especializados</option>
-                        <option value="hospitalizacion">Hospitalización</option>
-                        <option value="cirugia">Cirugía</option>
-                      </select>
+                        <select id="requerimiento" name="requerimiento" class="form-select">
+                          <option value="">Seleccionar requerimiento</option>
+                          @foreach($requerimientos as $req)
+                            <option value="{{ $req->id_requerimiento }}">{{ $req->requerimiento }}</option>
+                          @endforeach
+                        </select>
                     </div>
 
                     <!-- Fecha próxima revisión -->
@@ -155,14 +143,12 @@
                     <!-- Responsable -->
                     <div class="col-md-3 mb-3">
                       <label for="responsable" class="form-label">Responsable</label>
-                      <select id="responsable" name="responsable" class="form-select">
-                        <option value="">Seleccionar responsable</option>
-                        <option value="dr-martinez">Dr. Martínez</option>
-                        <option value="dra-rodriguez">Dra. Rodríguez</option>
-                        <option value="dr-gonzalez">Dr. González</option>
-                        <option value="dra-lopez">Dra. López</option>
-                        <option value="dr-silva">Dr. Silva</option>
-                      </select>
+                        <select id="responsable" name="responsable" class="form-select">
+                          <option value="">Seleccionar responsable</option>
+                          @foreach($responsables as $res)
+                            <option value="{{ $res->id_responsable }}">{{ $res->responsable }}</option>
+                          @endforeach
+                        </select>
                     </div>
                   </div>
 

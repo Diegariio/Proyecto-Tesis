@@ -8,8 +8,16 @@ use App\Models\Radioterapeuta;
 use App\Models\CodigoTratamiento;
 use App\Models\CodigoGES;
 use App\Models\QuimioterapiaConcominante;
-
 use App\Http\Controllers\RegistroTratamientoRadioterapiaController;
+
+use App\Models\EstadoProceso;
+use App\Models\Categoria;
+use App\Models\CodigoCie10;
+use App\Models\EmisorRequerimiento;
+use App\Models\EntidadQueResuelve;
+use App\Models\Requerimiento;
+use App\Models\Responsable;
+
 Route::get('/', function () {
     return view('home');
 });
@@ -37,5 +45,13 @@ Route::post('/registroTratamientoRadioterapia', [RegistroTratamientoRadioterapia
 
 
 Route::get('/gestionCasosOncologicos', function () {
-    return view('gestionOncologica.gestionCasosOncologicos');
+    return view('gestionOncologica.gestionCasosOncologicos', [
+        'estados' => EstadoProceso::orderBy('estado_proceso')->get(),
+        'categorias' => Categoria::orderBy('tipo_categoria')->get(),
+        'cie10' => CodigoCIE10::all(),
+        'emisores' => EmisorRequerimiento::all(),
+        'entidades' => EntidadQueResuelve::orderBy('catalogo')->get(),
+        'requerimientos' => Requerimiento::orderBy('requerimiento')->get(),
+        'responsables' => Responsable::all(),
+    ]);
 })->name('gestionCasosOncologicos');

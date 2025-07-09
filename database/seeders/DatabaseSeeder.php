@@ -12,6 +12,7 @@ use Database\Seeders\RadioterapeutaSeeder;
 use Database\Seeders\CodigoGESSeeder;
 use Database\Seeders\DiagnosticoSeeder;
 use Database\Seeders\QuimioterapiaConcominanteSeeder;
+use Database\Seeders\ComunaSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -35,6 +36,20 @@ class DatabaseSeeder extends Seeder
         CodigoGESSeeder::class,
         DiagnosticoSeeder::class,
         QuimioterapiaConcominanteSeeder::class,
+        ComunaSeeder::class,
+        SexoSeeder::class,
+        ServicioDeSaludSeeder::class,
+        PacienteSeeder::class,
+        CodigoCie10Seeder::class,
+        EstadoProcesoSeeder::class,
+        TieneSeeder::class,
+        GestionSeeder::class,
+        CategoriaSeeder::class,
+        ResponsableSeeder::class,
+        EntidadQueResuelveSeeder::class,
+        EmisorRequerimientoSeeder::class,
+        RegistroRequerimientoSeeder::class,
+        RequerimientoSeeder::class,
         ]);
     }
 }
