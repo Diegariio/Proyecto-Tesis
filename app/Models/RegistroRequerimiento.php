@@ -24,7 +24,7 @@ class RegistroRequerimiento extends Model
 
     public function paciente()
     {
-        return $this->belongsTo(Paciente::class, 'rut');
+        return $this->belongsTo(Paciente::class, 'rut', 'rut');
     }
 
     public function codigo()

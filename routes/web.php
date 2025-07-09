@@ -17,6 +17,7 @@ use App\Models\EmisorRequerimiento;
 use App\Models\EntidadQueResuelve;
 use App\Models\Requerimiento;
 use App\Models\Responsable;
+use App\Http\Controllers\GestionCasosOncologicosController;
 
 Route::get('/', function () {
     return view('home');
@@ -44,14 +45,5 @@ Route::get('/registroTratamientoRadioterapia', function () {
 Route::post('/registroTratamientoRadioterapia', [RegistroTratamientoRadioterapiaController::class, 'store'])->name('registro-tratamiento.store');
 
 
-Route::get('/gestionCasosOncologicos', function () {
-    return view('gestionOncologica.gestionCasosOncologicos', [
-        'estados' => EstadoProceso::orderBy('estado_proceso')->get(),
-        'categorias' => Categoria::orderBy('tipo_categoria')->get(),
-        'cie10' => CodigoCIE10::all(),
-        'emisores' => EmisorRequerimiento::all(),
-        'entidades' => EntidadQueResuelve::orderBy('catalogo')->get(),
-        'requerimientos' => Requerimiento::orderBy('requerimiento')->get(),
-        'responsables' => Responsable::all(),
-    ]);
-})->name('gestionCasosOncologicos');
+Route::get('/gestionCasosOncologicos', [GestionCasosOncologicosController::class, 'index'])->name('gestionCasosOncologicos');
+
