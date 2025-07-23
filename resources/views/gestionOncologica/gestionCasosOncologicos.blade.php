@@ -5,6 +5,12 @@
 @endsection
 
 @section('content')
+@if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+    @endif
     <div class="card mt-4">
         <div class="card-body">
             <form method="GET" action="{{ route('gestionCasosOncologicos') }}">
@@ -104,8 +110,8 @@
                     <a href="{{ route('gestionCasosOncologicos') }}" class="btn btn-secondary">
                         <i class="fas fa-arrow-rotate-left"></i> Limpiar
                     </a>
-                    <button type="button" class="btn btn-success">
-                        <i class="fas fa-plus-circle"></i> Agregar Nuevo Requerimiento
+                    <button type="button" class="btn btn-success" id="btn-agregar-requerimiento" disabled style="opacity: 0.5; pointer-events: none;">
+                    <i class="fas fa-plus-circle"></i> Agregar Nuevo Requerimiento
                     </button>
                 </div>
             </form>
@@ -153,29 +159,140 @@
         </div>
     @endif
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const rutInput = document.getElementById('rut-paciente');
-            if (rutInput) {
-                rutInput.addEventListener('input', function (e) {
-                    let value = e.target.value.replace(/\D/g, '');
-                    if (value.length > 1) {
-                        const cuerpo = value.slice(0, -1);
-                        const dv = value.slice(-1);
-                        let formatted = '';
-                        let reversed = cuerpo.split('').reverse().join('');
-                        for (let i = 0; i < reversed.length; i++) {
-                            if (i !== 0 && i % 3 === 0) {
-                                formatted = '.' + formatted;
-                            }
-                            formatted = reversed[i] + formatted;
-                        }
-                        e.target.value = formatted + '-' + dv;
-                    } else {
-                        e.target.value = value;
+
+<div class="modal fade" id="modalRequerimiento" tabindex="-1" aria-labelledby="modalRequerimientoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl"> <!-- Cambiado a modal-xl -->
+    <div class="modal-content shadow-lg"> <!-- Sombra extra -->
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalRequerimientoLabel">Registro de Requerimiento</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+                <!-- Aquí van los recuadros de información y el formulario -->
+<div id="info-paciente-modal" class="card mb-3" style="display: none;">
+    <div class="card-body">
+        <strong>RUT:</strong> <span id="modal-rut"></span><br>
+        <strong>Nombre:</strong> <span id="modal-nombre"></span><br>
+        <strong>Apellidos:</strong> <span id="modal-apellidos"></span>
+    </div>
+</div>
+<div id="info-paciente-error" class="alert alert-danger" style="display: none;">
+    Paciente no encontrado.
+</div>
+        <div id="info-caso" class="mb-3">
+          <!-- Recuadro de información del caso oncológico (rellenar con datos) -->
+        </div>
+
+        @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+@endif
+<form id="form-requerimiento" method="POST" action="{{ route('registroRequerimiento.store') }}">
+    @csrf
+    <input type="hidden" name="rut" id="input-rut-modal">
+    <!-- Aquí los demás campos: requerimiento, fecha, responsable, etc. -->
+    <div class="mb-3">
+        <label for="requerimiento" class="form-label">Requerimiento</label>
+        <select name="requerimiento" id="requerimiento" class="form-select">
+            @foreach($requerimientos as $req)
+                <option value="{{ $req->id_requerimiento }}">{{ $req->requerimiento }}</option>
+            @endforeach
+        </select>
+    </div>
+    <!-- ...otros campos... -->
+    <button type="submit" class="btn btn-primary">Registrar Requerimiento</button>
+</form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Formateo de RUT
+    const rutInput = document.getElementById('rut-paciente');
+    if (rutInput) {
+        rutInput.addEventListener('input', function (e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 1) {
+                const cuerpo = value.slice(0, -1);
+                const dv = value.slice(-1);
+                let formatted = '';
+                let reversed = cuerpo.split('').reverse().join('');
+                for (let i = 0; i < reversed.length; i++) {
+                    if (i !== 0 && i % 3 === 0) {
+                        formatted = '.' + formatted;
                     }
-                });
+                    formatted = reversed[i] + formatted;
+                }
+                e.target.value = formatted + '-' + dv;
+            } else {
+                e.target.value = value;
             }
         });
-    </script>
+    }
+
+    // Habilitar botón solo si RUT y CIE10 están completos
+    const cie10Select = document.getElementById('cie10');
+    const btnAgregar = document.getElementById('btn-agregar-requerimiento');
+
+    function checkFields() {
+        if (rutInput.value.trim() !== '' && cie10Select.value.trim() !== '') {
+            btnAgregar.disabled = false;
+            btnAgregar.style.opacity = 1;
+            btnAgregar.style.pointerEvents = 'auto';
+        } else {
+            btnAgregar.disabled = true;
+            btnAgregar.style.opacity = 0.5;
+            btnAgregar.style.pointerEvents = 'none';
+        }
+    }
+
+    rutInput.addEventListener('input', checkFields);
+    cie10Select.addEventListener('change', checkFields);
+
+    // Mostrar el modal al hacer click
+    btnAgregar.addEventListener('click', function() {
+        var modal = new bootstrap.Modal(document.getElementById('modalRequerimiento'));
+        modal.show();
+    });
+
+
+    btnAgregar.addEventListener('click', function() {
+    // Obtener el RUT ingresado
+    const rut = rutInput.value.trim();
+
+    // Asignar el RUT al input oculto del modal
+    document.getElementById('input-rut-modal').value = rut;
+
+    // Limpiar info anterior
+    document.getElementById('info-paciente-modal').style.display = 'none';
+    document.getElementById('info-paciente-error').style.display = 'none';
+
+    // Buscar paciente por AJAX
+    fetch(`/paciente/buscar?rut=${encodeURIComponent(rut)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('modal-rut').textContent = data.paciente.rut;
+                document.getElementById('modal-nombre').textContent = data.paciente.nombre;
+                document.getElementById('modal-apellidos').textContent = data.paciente.apellidos;
+                document.getElementById('info-paciente-modal').style.display = 'block';
+            } else {
+                document.getElementById('info-paciente-error').style.display = 'block';
+            }
+            // Mostrar el modal
+            var modal = new bootstrap.Modal(document.getElementById('modalRequerimiento'));
+            modal.show();
+        })
+        .catch(() => {
+            document.getElementById('info-paciente-error').style.display = 'block';
+            var modal = new bootstrap.Modal(document.getElementById('modalRequerimiento'));
+            modal.show();
+        });
+});
+
+});
+</script>
 @endsection

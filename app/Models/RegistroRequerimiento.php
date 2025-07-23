@@ -9,6 +9,7 @@ class RegistroRequerimiento extends Model
     protected $table = 'registro_requerimiento';
     protected $primaryKey = 'id_registro_requerimiento';
     protected $fillable = [
+        'id_requerimiento',
         'id_codigo',
         'id_gestion',
         'rut',
@@ -51,4 +52,9 @@ class RegistroRequerimiento extends Model
     {
         return $this->hasMany(Requerimiento::class, 'id_registro_requerimiento');
     }
+
+    public function requerimiento()
+{
+    return $this->belongsTo(Requerimiento::class, 'id_requerimiento');
+}
 }

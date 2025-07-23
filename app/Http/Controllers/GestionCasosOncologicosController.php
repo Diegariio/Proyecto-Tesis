@@ -51,4 +51,24 @@ class GestionCasosOncologicosController extends Controller
             'responsables' => Responsable::all(),
         ]);
     }
+
+   public function buscarPacientePorRut(Request $request)
+   {
+       $rut = $request->query('rut');
+       $paciente = \App\Models\Paciente::where('rut', $rut)->first();
+
+       if ($paciente) {
+           return response()->json([
+               'success' => true,
+               'paciente' => [
+                   'rut' => $paciente->rut,
+                   'nombre' => $paciente->nombre,
+                   'apellidos' => $paciente->apellidos,
+                   // agrega más campos si necesitas
+               ]
+           ]);
+       } else {
+           return response()->json(['success' => false, 'message' => 'Paciente no encontrado']);
+       }
+   }
 }
