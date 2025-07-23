@@ -18,6 +18,7 @@ use App\Models\EntidadQueResuelve;
 use App\Models\Requerimiento;
 use App\Models\Responsable;
 use App\Http\Controllers\GestionCasosOncologicosController;
+use App\Http\Controllers\RegistroRequerimientoController;
 
 Route::get('/', function () {
     return view('home');
@@ -47,3 +48,5 @@ Route::post('/registroTratamientoRadioterapia', [RegistroTratamientoRadioterapia
 
 Route::get('/gestionCasosOncologicos', [GestionCasosOncologicosController::class, 'index'])->name('gestionCasosOncologicos');
 
+Route::get('/paciente/buscar', [GestionCasosOncologicosController::class, 'buscarPacientePorRut'])->name('paciente.buscar');
+Route::post('/registro-requerimiento', [RegistroRequerimientoController::class, 'store'])->name('registroRequerimiento.store');

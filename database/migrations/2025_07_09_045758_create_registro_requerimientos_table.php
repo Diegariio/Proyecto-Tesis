@@ -25,7 +25,7 @@ return new class extends Migration
             $table->date('fecha_gestion')->nullable();
             $table->text('respuesta')->nullable();
             $table->timestamps();
-
+            $table->unsignedBigInteger('id_requerimiento');
             $table->foreign('id_codigo')->references('id_codigo')->on('codigo_cie10');
             $table->foreign('id_gestion')->references('id_gestion')->on('gestion');
             $table->foreign('rut')->references('rut')->on('paciente');
