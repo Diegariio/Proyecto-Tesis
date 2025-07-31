@@ -1,7 +1,14 @@
-<nav class="sb-sidenav accordion text-bg-dark" id="sidenavAccordion">
-    <div class="sb-sidenav-menu p-3">
+<nav id="sidenav-accordion" class="sb-sidenav accordion text-bg-dark">
+    <div class="sb-sidenav-menu">
         <div class="nav">
-            <div class="sb-sidenav-menu-heading">Menú</div>
+            <div class="sb-sidenav-menu-heading text-uppercase">Principal</div>
+
+            <a class="nav-link text-light" href="{{ url('/') }}">
+                <div class="sb-nav-link-icon">
+                    <i class="fas fa-home"></i>
+                </div>
+                Inicio
+            </a>
 
             <a href="{{ url('/registroTratamientoRadioterapia') }}" class="nav-link text-light text-opacity-75">
                 <div class="sb-nav-link-icon">
@@ -16,7 +23,6 @@
                 </div>
                 Gestión Casos Oncológicos
             </a>
-
         </div>
     </div>
 

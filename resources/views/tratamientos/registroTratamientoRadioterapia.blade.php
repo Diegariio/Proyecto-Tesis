@@ -5,6 +5,7 @@
 @endsection
 
 @section('content')
+<h1 class="h4">Registro Clínico de Tratamiento Oncológico Ambulatorio</h1>
     <div class="card mt-4">
         <div class="card-body">
             @if(session('success'))

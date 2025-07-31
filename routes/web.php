@@ -50,3 +50,15 @@ Route::get('/gestionCasosOncologicos', [GestionCasosOncologicosController::class
 
 Route::get('/paciente/buscar', [GestionCasosOncologicosController::class, 'buscarPacientePorRut'])->name('paciente.buscar');
 Route::post('/registro-requerimiento', [RegistroRequerimientoController::class, 'store'])->name('registroRequerimiento.store');
+
+Route::get('/profile', function() {
+    return redirect('/');
+})->name('profile');
+
+Route::get('/changepass', function() {
+    return redirect('/');
+})->name('changepass');
+
+Route::get('/logout', function() {
+    return redirect('/');
+})->name('logout');

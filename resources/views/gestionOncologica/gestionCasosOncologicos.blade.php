@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('header')
-    <h1 class="h3">Gestión de Requerimientos</h1>
-@endsection
+@section('title', 'Gestión de Requerimientos')
+
 
 @section('content')
+<h1 class="h4">Gestión de Casos Oncológicos</h1>
 @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
