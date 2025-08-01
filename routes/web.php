@@ -67,3 +67,4 @@ Route::get('/demo-filtro', function() {
     return view('demo-filtro');
 })->name('demo-filtro');
 Route::post('/validar-rut', [GestionCasosOncologicosController::class, 'validarRut'])->name('validar.rut');
+Route::post('/obtener-cie10-por-rut', [GestionCasosOncologicosController::class, 'obtenerCie10PorRut'])->name('obtenerCie10PorRut');

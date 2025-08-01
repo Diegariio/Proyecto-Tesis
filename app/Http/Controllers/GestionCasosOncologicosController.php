@@ -13,7 +13,27 @@ use App\Models\Paciente;
 
 class GestionCasosOncologicosController extends Controller
 {
-
+    public function obtenerCie10PorRut(Request $request)
+    {
+        $request->validate([
+            'rut' => 'required|regex:/^[0-9]{1,2}\.[0-9]{3}\.[0-9]{3}-[0-9kK]$/'
+        ]);
+    
+        $rut = $request->input('rut');
+    
+        // Buscar los códigos CIE10 asociados al RUT
+        $codigosCie10 = RegistroRequerimiento::where('rut', $rut)
+            ->with('codigo:id_codigo,codigo_cie10,descripcion')
+            ->get()
+            ->pluck('codigo')
+            ->unique('id_codigo')
+            ->values();
+    
+        return response()->json([
+            'success' => true,
+            'codigos' => $codigosCie10
+        ]);
+    }
     public function gestionCasosOncologicos(Request $request)
     {
         $request->validate([

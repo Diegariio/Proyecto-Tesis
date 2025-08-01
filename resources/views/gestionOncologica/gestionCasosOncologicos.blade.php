@@ -357,6 +357,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Resetear validación cuando cambia el RUT
             rutValidado = false;
             resetearEstilo();
+            restaurarTodosLosCie10();
             checkFields();
             
             // Validación de RUT después del formateo
@@ -378,6 +379,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Resetear validación
                 rutValidado = false;
                 resetearEstilo();
+                restaurarTodosLosCie10();
                 checkFields();
                 
                 // Validar después del formateo
@@ -440,6 +442,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (rut.length < 8) {
             resetearEstilo();
             rutValidado = false;
+            restaurarTodosLosCie10();
             checkFields();
             return;
         }
@@ -457,15 +460,20 @@ document.addEventListener('DOMContentLoaded', function () {
             if (data.valido) {
                 mostrarExito();
                 rutValidado = true;
+                // Obtener CIE10 específicos para este RUT
+                obtenerCie10PorRut(rut);
             } else {
                 mostrarError(data.mensaje);
                 rutValidado = false;
+                // Restaurar todos los CIE10
+                restaurarTodosLosCie10();
             }
             checkFields();
         })
         .catch(error => {
             mostrarError('Error de conexión. Intente nuevamente.');
             rutValidado = false;
+            restaurarTodosLosCie10();
             checkFields();
         });
     }
@@ -505,6 +513,128 @@ function resetearEstilo() {
     const input = rutInput;
     input.classList.remove('is-valid', 'is-invalid');
     iconrut.style.display = 'none';
+}
+
+// Función para obtener CIE10 por RUT
+function obtenerCie10PorRut(rut) {
+    fetch('/obtener-cie10-por-rut', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ rut: rut })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            filtrarSelectCie10(data.codigos);
+        } else {
+            console.error('Error al obtener códigos CIE10');
+            restaurarTodosLosCie10();
+        }
+    })
+    .catch(error => {
+        console.error('Error en la petición:', error);
+        restaurarTodosLosCie10();
+    });
+}
+
+// Función para filtrar el select de CIE10
+function filtrarSelectCie10(codigosEncontrados) {
+    const selectCie10 = document.getElementById('cie10');
+    const todasLasOpciones = selectCie10.querySelectorAll('option');
+    
+    // Obtener los IDs de los códigos encontrados
+    const codigosIds = codigosEncontrados.map(codigo => codigo.id_codigo);
+    
+    // Mostrar/ocultar opciones según si están en los resultados
+    todasLasOpciones.forEach(option => {
+        if (option.value === '') {
+            // Mantener la opción "Seleccionar CIE 10" siempre visible
+            option.style.display = '';
+        } else {
+            // Mostrar solo si está en los códigos encontrados
+            option.style.display = codigosIds.includes(parseInt(option.value)) ? '' : 'none';
+        }
+    });
+    
+    // Limpiar la selección actual
+    selectCie10.value = '';
+}
+
+// Función para restaurar todas las opciones
+function restaurarTodosLosCie10() {
+    const selectCie10 = document.getElementById('cie10');
+    const todasLasOpciones = selectCie10.querySelectorAll('option');
+    
+    todasLasOpciones.forEach(option => {
+        option.style.display = '';
+    });
+    
+    // Limpiar la selección actual
+    selectCie10.value = '';
+}
+
+// Función para obtener CIE10 por RUT
+function obtenerCie10PorRut(rut) {
+    fetch('/obtener-cie10-por-rut', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ rut: rut })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            filtrarSelectCie10(data.codigos);
+        } else {
+            console.error('Error al obtener códigos CIE10');
+            restaurarTodosLosCie10();
+        }
+    })
+    .catch(error => {
+        console.error('Error en la petición:', error);
+        restaurarTodosLosCie10();
+    });
+}
+
+// Función para filtrar el select de CIE10
+function filtrarSelectCie10(codigosEncontrados) {
+    const selectCie10 = document.getElementById('cie10');
+    const todasLasOpciones = selectCie10.querySelectorAll('option');
+    
+    // Obtener los IDs de los códigos encontrados
+    const codigosIds = codigosEncontrados.map(codigo => codigo.id_codigo);
+    
+    // Mostrar/ocultar opciones según si están en los resultados
+    todasLasOpciones.forEach(option => {
+        if (option.value === '') {
+            // Mantener la opción "Seleccionar CIE 10" siempre visible
+            option.style.display = '';
+        } else {
+            // Mostrar solo si está en los códigos encontrados
+            option.style.display = codigosIds.includes(parseInt(option.value)) ? '' : 'none';
+        }
+    });
+    
+    // Limpiar la selección actual
+    selectCie10.value = '';
+}
+
+// Función para restaurar todas las opciones
+function restaurarTodosLosCie10() {
+    const selectCie10 = document.getElementById('cie10');
+    const todasLasOpciones = selectCie10.querySelectorAll('option');
+    
+    todasLasOpciones.forEach(option => {
+        option.style.display = '';
+    });
+    
+    // Limpiar la selección actual
+    selectCie10.value = '';
 }
 
     // Habilitar botón solo si RUT es válido Y CIE10 está completo
