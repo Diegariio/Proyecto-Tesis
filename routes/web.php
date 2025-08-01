@@ -46,8 +46,7 @@ Route::get('/registroTratamientoRadioterapia', function () {
 Route::post('/registroTratamientoRadioterapia', [RegistroTratamientoRadioterapiaController::class, 'store'])->name('registro-tratamiento.store');
 
 
-Route::get('/gestionCasosOncologicos', [GestionCasosOncologicosController::class, 'index'])->name('gestionCasosOncologicos');
-
+Route::get('/gestionCasosOncologicos', [GestionCasosOncologicosController::class, 'gestionCasosOncologicos'])->name('gestionCasosOncologicos');
 Route::get('/paciente/buscar', [GestionCasosOncologicosController::class, 'buscarPacientePorRut'])->name('paciente.buscar');
 Route::post('/registro-requerimiento', [RegistroRequerimientoController::class, 'store'])->name('registroRequerimiento.store');
 

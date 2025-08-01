@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('rut');
             $table->unsignedBigInteger('id_categoria');
             $table->unsignedBigInteger('id_responsable');
+            $table->unsignedBigInteger('id_entidad');
+            $table->unsignedBigInteger('id_emisor');
             $table->date('fecha')->nullable();
             $table->text('resolucion_comite')->nullable();
             $table->date('fecha_proxima_revision')->nullable();
@@ -31,6 +33,8 @@ return new class extends Migration
             $table->foreign('rut')->references('rut')->on('paciente');
             $table->foreign('id_categoria')->references('id_categoria')->on('categoria');
             $table->foreign('id_responsable')->references('id_responsable')->on('responsable');
+            $table->foreign('id_entidad')->references('id_entidad')->on('entidad_que_resuelve');
+            $table->foreign('id_emisor')->references('id_emisor')->on('emisor_requerimiento');
         });
 
     }

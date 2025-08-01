@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('paciente', function (Blueprint $table) {
             $table->string('rut')->primary();
             $table->string('nombre');
-            $table->string('apellidos');
+            $table->string('primer_apellido');
+            $table->string('segundo_apellido');
             $table->unsignedBigInteger('id_comuna');
             $table->unsignedBigInteger('id_sexo');
             $table->unsignedBigInteger('id_servicio');

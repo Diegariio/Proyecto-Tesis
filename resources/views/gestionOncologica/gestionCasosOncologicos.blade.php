@@ -29,10 +29,14 @@
                     </div>
                     <div class="form-group col-md-3" id="grut">
     <label for="rut-paciente" class="form-label">RUT Paciente</label>
-    <input type="text" id="rut-paciente" name="rut-paciente" 
-           class="form-control" placeholder="12.345.678-9" 
-           maxlength="12" value="{{ request('rut-paciente') }}">
-    <i class="fa form-control-feedback fa-check" id="iconrut" style="display: none;"></i>
+    <div class="position-relative">
+        <input type="text" id="rut-paciente" name="rut-paciente" 
+               class="form-control" placeholder="12.345.678-9" 
+               maxlength="12" value="{{ request('rut-paciente') }}">
+        <div class="position-absolute top-0 end-0 h-100 d-flex align-items-center pe-3">
+            <i class="fas fa-check text-success" id="iconrut" style="display: none;"></i>
+        </div>
+    </div>
 </div>
                     <div class="form-group col-md-3">
                         <label for="nombres" class="form-label">Nombres</label>
@@ -121,47 +125,118 @@
         </div>
     </div>
 
-    @if(isset($resultados))
-        <div class="card mt-4">
-            <div class="card-body">
-                <h4>Resultados de la búsqueda</h4>
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover text-nowrap mb-0">
-                        @if($resultados->count() == 0)
-                            <caption class="text-center">No se encontraron registros que coincidan con los criterios de búsqueda.</caption>
-                        @endif
-                        <thead>
+    @if($resultados->count() > 0)
+    <!-- TÍTULO DE RESULTADOS -->
+    <div class="card mt-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-search me-2"></i>
+                Resultados de la búsqueda ({{ $resultados->count() }} registros encontrados)
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Acciones</th>
+                            <th>RUT Paciente</th>
+                            <th>Nombre Paciente</th>
+                            <th>Diagnóstico</th>
+                            <th>Fecha Requerimiento</th>
+                            <th>Fecha Próxima Revisión</th>
+                            <th>Requerimiento</th>
+                            <th>Responsable</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($resultados as $registro)
                             <tr>
-                                <th>Acciones</th>
-                                <th>RUT Paciente</th>
-                                <th>Nombre Paciente</th>
-                                <th>Diagnóstico</th>
-                                <th>Fecha Requerimiento</th>
-                                <th>Requerimiento</th>
-                                <th>Responsable</th>
+                                <!-- Acciones -->
+                                <td>
+                                    <button class="btn btn-sm btn-info" title="Ver detalles">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                                
+                                <!-- RUT Paciente -->
+                                <td>{{ $registro->paciente->rut ?? 'N/A' }}</td>
+                                
+                                <!-- Nombre Paciente -->
+                                <td>
+                                    {{ $registro->paciente->nombre ?? '' }} 
+                                    {{ $registro->paciente->primer_apellido ?? '' }} 
+                                    {{ $registro->paciente->segundo_apellido ?? '' }}
+                                </td>
+                                
+                                <!-- Diagnóstico -->
+                                <td>
+                                    @if($registro->codigo)
+                                        {{ $registro->codigo->codigo_cie10 ?? '' }} - 
+                                        {{ $registro->codigo->descripcion ?? '' }}
+                                    @else
+                                        N/A
+                                    @endif
+                                </td>
+                                
+                                <!-- Fecha Requerimiento -->
+                                <td>{{ $registro->created_at ? $registro->created_at->format('d/m/Y') : 'N/A' }}</td>
+                                
+                                <!-- Fecha Próxima Revisión con indicador de urgencia -->
+                                <td>
+                                    @if($registro->fecha_proxima_revision)
+                                        @php
+                                            $fecha = \Carbon\Carbon::parse($registro->fecha_proxima_revision);
+                                            $hoy = \Carbon\Carbon::now();
+                                            $diasRestantes = $hoy->diffInDays($fecha, false);
+                                        @endphp
+                                        
+                                        <span class="{{ $diasRestantes <= 7 ? 'text-danger fw-bold' : ($diasRestantes <= 14 ? 'text-warning' : 'text-success') }}">
+                                            {{ $fecha->format('d/m/Y') }}
+                                            @if($diasRestantes <= 7)
+                                                <i class="fas fa-exclamation-triangle ms-1" title="Revisión próxima"></i>
+                                            @endif
+                                        </span>
+                                    @else
+                                        N/A
+                                    @endif
+                                </td>
+                                
+                                <!-- Requerimiento -->
+                                <td>
+                                    @if($registro->requerimiento)
+                                        {{ $registro->requerimiento->requerimiento ?? 'N/A' }}
+                                    @else
+                                        N/A (ID: {{ $registro->id_requerimiento }})
+                                    @endif
+                                </td>
+                                
+                                <!-- Responsable -->
+                                <td>
+                                    @if($registro->responsable)
+                                        {{ $registro->responsable->responsable ?? 'N/A' }}
+                                    @else
+                                        N/A (ID: {{ $registro->id_responsable }})
+                                    @endif
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($resultados as $registro)
-                                @foreach($registro->requerimientos as $req)
-                                    <tr>
-                                        <td><a href="#" class="btn btn-sm btn-primary"><i class="fas fa-eye"></i></a></td>
-                                        <td>{{ $registro->paciente->rut ?? 'N/A' }}</td>
-                                        <td>{{ $registro->paciente->nombre ?? '' }} {{ $registro->paciente->apellidos?? '' }} </td>
-                                        <td>{{ $registro->codigo->descripcion ?? 'N/A' }}</td>
-                                        <td>{{ $registro->fecha ?? 'N/A' }}</td>
-                                        <td>{{ $req->requerimiento ?? 'N/A' }}</td>
-                                        <td>{{ $registro->responsable->responsable ?? 'N/A' }}</td>
-                                    </tr>
-                                @endforeach
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
         </div>
-    @endif
-
+    </div>
+@else
+    <!-- MENSAJE CUANDO NO HAY RESULTADOS -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <div class="alert alert-info mb-0">
+                <i class="fas fa-info-circle me-2"></i>
+                No se encontraron registros con los filtros aplicados.
+            </div>
+        </div>
+    </div>
+@endif
 
 <div class="modal fade" id="modalRequerimiento" tabindex="-1" aria-labelledby="modalRequerimientoLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl"> <!-- Cambiado a modal-xl -->
@@ -288,7 +363,7 @@ document.addEventListener('DOMContentLoaded', function () {
             clearTimeout(timeoutId);
             timeoutId = setTimeout(() => {
                 validarRut(e.target.value);
-            }, 500);
+            }, 1000);
         });
 
         // Manejar el evento de pegado específicamente
@@ -396,35 +471,41 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     function mostrarExito() {
-        grut.className = 'form-group col-md-3 has-feedback has-success';
-        iconrut.style.display = 'block';
-        iconrut.className = 'fa form-control-feedback fa-check';
-    }
+    grut.className = 'form-group col-md-3';
+    const input = rutInput;
+    input.classList.add('is-valid');
+    iconrut.style.display = 'block';
+    iconrut.className = 'fas fa-check text-success';
+}
+
+function mostrarError(mensaje) {
+    grut.className = 'form-group col-md-3';
+    const input = rutInput;
+    input.classList.add('is-invalid');
+    iconrut.style.display = 'block';
+    iconrut.className = 'fas fa-times text-danger';
     
-    function mostrarError(mensaje) {
-        grut.className = 'form-group col-md-3 has-feedback has-error';
-        iconrut.style.display = 'block';
-        iconrut.className = 'fa form-control-feedback fa-times';
-        
-        Swal.fire({
-            icon: 'error',
-            title: 'Error!',
-            text: mensaje,
-            confirmButtonText: 'OK',
-            confirmButtonColor: '#3085d6',
-            customClass: {
-                popup: 'swal2-custom-popup',
-                title: 'swal2-custom-title',
-                content: 'swal2-custom-content',
-                confirmButton: 'swal2-custom-button'
-            }
-        });
-    }
-    
-    function resetearEstilo() {
-        grut.className = 'form-group col-md-3';
-        iconrut.style.display = 'none';
-    }
+    Swal.fire({
+        icon: 'error',
+        title: 'Error!',
+        text: mensaje,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6',
+        customClass: {
+            popup: 'swal2-custom-popup',
+            title: 'swal2-custom-title',
+            content: 'swal2-custom-content',
+            confirmButton: 'swal2-custom-button'
+        }
+    });
+}
+
+function resetearEstilo() {
+    grut.className = 'form-group col-md-3';
+    const input = rutInput;
+    input.classList.remove('is-valid', 'is-invalid');
+    iconrut.style.display = 'none';
+}
 
     // Habilitar botón solo si RUT es válido Y CIE10 está completo
     const cie10Select = document.getElementById('cie10');
@@ -500,5 +581,89 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+
+function validarCamposTexto() {
+    const campos = [
+        { id: 'nombres', nombre: 'Nombres', tipo: 'nombre' },
+        { id: 'primer-apellido', nombre: 'Primer apellido', tipo: 'apellido' },
+        { id: 'segundo-apellido', nombre: 'Segundo apellido', tipo: 'apellido' }
+    ];
+
+    campos.forEach(campo => {
+        const input = document.getElementById(campo.id);
+        if (input) {
+            // Validación en tiempo real mientras escribe
+            input.addEventListener('input', function() {
+                const valor = this.value;
+                
+                if (campo.tipo === 'nombre') {
+                    // Para nombres: solo letras y máximo 1 espacio
+                    const valorLimpio = valor.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+                    const espacios = (valorLimpio.match(/\s/g) || []).length;
+                    
+                    if (espacios > 1) {
+                        // Si hay más de 1 espacio, eliminar extras
+                        this.value = valorLimpio.replace(/\s+/g, ' ').trim();
+                    } else {
+                        this.value = valorLimpio;
+                    }
+                } else {
+                    // Para apellidos: solo letras, espacios, guiones
+                    this.value = valor.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s-]/g, '');
+                }
+            });
+
+            // Validación al salir del campo
+            input.addEventListener('blur', function() {
+                const valor = this.value.trim();
+                
+                if (valor && !validarNombreApellido(valor, campo.tipo)) {
+                    this.classList.add('is-invalid');
+                    mostrarErrorCampo(`${campo.nombre} contiene caracteres inválidos`);
+                } else {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        }
+    });
+}
+
+function validarNombreApellido(texto, tipo) {
+    if (texto.trim().length < 2) {
+        return false;
+    }
+
+    if (tipo === 'nombre') {
+        // Para nombres: solo letras y máximo 1 espacio
+        const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(\s[a-zA-ZáéíóúÁÉÍÓÚñÑ]+)?$/;
+        return regex.test(texto) && texto.trim().length >= 2;
+    } else {
+        // Para apellidos: letras, espacios, guiones
+        const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s-]+$/;
+        return regex.test(texto) && texto.trim().length >= 2;
+    }
+}
+
+function mostrarErrorCampo(mensaje) {
+    Swal.fire({
+        icon: 'warning',
+        title: 'Campo inválido',
+        text: mensaje,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6',
+        customClass: {
+            popup: 'swal2-custom-popup',
+            title: 'swal2-custom-title',
+            content: 'swal2-custom-content',
+            confirmButton: 'swal2-custom-button'
+        }
+    });
+}
+
+// Llamar la función al cargar
+document.addEventListener('DOMContentLoaded', function() {
+    validarCamposTexto();
+});
 </script>
+
 @endsection

@@ -121,8 +121,6 @@ class RequerimientoSeeder extends Seeder
         foreach ($requerimientos as $req) {
             Requerimiento::firstOrCreate([
                 'requerimiento' => $req,
-                'id_entidad' => rand(1, 140),
-                'id_emisor' => rand(1, 140),
                 'id_registro_requerimiento' => rand(1, 10),
             ]);
         }

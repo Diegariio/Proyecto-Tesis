@@ -15,6 +15,8 @@ class RegistroRequerimiento extends Model
         'rut',
         'id_categoria',
         'id_responsable',
+        'id_entidad',
+        'id_emisor',
         'fecha',
         'resolucion_comite',
         'fecha_proxima_revision',
@@ -46,6 +48,16 @@ class RegistroRequerimiento extends Model
     public function responsable()
     {
         return $this->belongsTo(Responsable::class, 'id_responsable');
+    }
+
+    public function entidad()
+    {
+        return $this->belongsTo(EntidadQueResuelve::class, 'id_entidad');
+    }
+
+    public function emisor()
+    {
+        return $this->belongsTo(EmisorRequerimiento::class, 'id_emisor');
     }
 
     public function requerimientos()

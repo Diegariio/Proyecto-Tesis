@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\RegistroRequerimiento;
+use Carbon\Carbon;
 
 class RegistroRequerimientoSeeder extends Seeder
 {
@@ -36,15 +37,17 @@ class RegistroRequerimientoSeeder extends Seeder
 
         for ($i = 1; $i <= 106; $i++) {
             RegistroRequerimiento::create([
-                'id_requerimiento'               => rand(1, 10),
+                'id_requerimiento'        => rand(1, 10),
                 'id_codigo'               => rand(1, 10),
                 'id_gestion'              => rand(1, 15),
                 'rut'                     => $ruts[array_rand($ruts)],
                 'id_categoria'            => rand(1, 7),
                 'id_responsable'          => rand(1, 12),
+                'id_entidad'              => rand(1, 100),
+                'id_emisor'               => rand(1, 100),
                 'fecha'                   => now()->format('Y-m-d'),
                 'resolucion_comite'       => null,
-                'fecha_proxima_revision'  => null,
+                'fecha_proxima_revision'  => Carbon::now()->addDays(rand(1, 14)),
                 'resolucion_caso'         => null,
                 'fecha_gestion'           => null,
                 'respuesta'               => null,

@@ -13,66 +13,153 @@ use App\Models\Paciente;
 
 class GestionCasosOncologicosController extends Controller
 {
-    public function index(Request $request)
+
+    public function gestionCasosOncologicos(Request $request)
     {
+        $request->validate([
+            'fecha-desde' => 'nullable|date|before_or_equal:fecha-hasta',
+            'fecha-hasta' => 'nullable|date|after_or_equal:fecha-desde',
+            'fecha-proxima-revision' => 'nullable|date',
+            'rut-paciente' => 'nullable|regex:/^[0-9]{1,2}\.[0-9]{3}\.[0-9]{3}-[0-9kK]$/',
+            'nombres' => 'nullable|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/|min:2|max:50',
+            'primer-apellido' => 'nullable|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s-]+$/|min:2|max:50',
+            'segundo-apellido' => 'nullable|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s-]+$/|min:2|max:50',
+            'categoria' => 'nullable|exists:categoria,id_categoria',
+            'cie10' => 'nullable|exists:codigo_cie10,id_codigo',
+            'entidad' => 'nullable|exists:entidad_que_resuelve,id_entidad',
+            'requerimiento' => 'nullable|exists:requerimiento,id_requerimiento',
+            'responsable' => 'nullable|exists:responsable,id_responsable', // NUEVO: Validar responsable
+        ]);
+    
+        // Cargar TODAS las relaciones necesarias
         $query = RegistroRequerimiento::with([
             'paciente',
+            'responsable',    // Ya está cargado
             'codigo',
-            'responsable',
-            'requerimientos.emisor',
+            'requerimiento',
+            'categoria',
+            'entidad',
+            'emisor'
         ]);
-
-        // Filtro por RUT
+    
+        // Filtro por RUT (prioridad alta)
         if ($request->filled('rut-paciente')) {
-            $rut = preg_replace('/[^0-9kK]/', '', $request->input('rut-paciente'));
-
-            $query->whereHas('paciente', function ($q) use ($rut) {
-                $q->whereRaw("REPLACE(REPLACE(REPLACE(rut, '.', ''), '-', ''), 'K', 'k') LIKE ?", ["%$rut%"]);
-            });
+            $query->where('rut', $request->input('rut-paciente'));
         }
-
-        // Otros filtros (puedes ir agregando más)
+        // Filtros por nombres (cuando no hay RUT)
+        else {
+            $rutsEncontrados = collect();
+            
+            // Buscar pacientes por nombres
+            $pacientesQuery = Paciente::query();
+            
+            if ($request->filled('nombres')) {
+                $pacientesQuery->where('nombre', 'LIKE', '%' . $request->input('nombres') . '%');
+            }
+            
+            if ($request->filled('primer-apellido')) {
+                $pacientesQuery->where('primer_apellido', 'LIKE', '%' . $request->input('primer-apellido') . '%');
+            }
+            
+            if ($request->filled('segundo-apellido')) {
+                $pacientesQuery->where('segundo_apellido', 'LIKE', '%' . $request->input('segundo-apellido') . '%');
+            }
+            
+            // Si se aplicaron filtros de nombres, obtener los RUTs
+            if ($request->filled('nombres') || $request->filled('primer-apellido') || $request->filled('segundo-apellido')) {
+                $rutsEncontrados = $pacientesQuery->pluck('rut');
+                
+                if ($rutsEncontrados->count() > 0) {
+                    $query->whereIn('rut', $rutsEncontrados);
+                } else {
+                    // Si no se encontraron pacientes, retornar resultados vacíos
+                    $query->where('rut', 'INEXISTENTE');
+                }
+            }
+        }
+    
+        // Filtros por fechas de creación
         if ($request->filled('fecha-desde')) {
-            $query->whereDate('fecha', '>=', $request->input('fecha-desde'));
+            $query->whereDate('created_at', '>=', $request->input('fecha-desde'));
         }
-
+    
         if ($request->filled('fecha-hasta')) {
-            $query->whereDate('fecha', '<=', $request->input('fecha-hasta'));
+            $query->whereDate('created_at', '<=', $request->input('fecha-hasta'));
         }
-
-        // Trae los resultados si se realizó al menos una búsqueda
-        $resultados = $request->all() ? $query->get() : collect();
-
-        return view('gestionOncologica.gestionCasosOncologicos', [
-            'resultados' => $resultados,
-            'categorias' => Categoria::all(),
-            'codigo' => CodigoCie10::all(),
-            'entidades' => EntidadQueResuelve::all(),
-            'requerimientos' => Requerimiento::all(),
-            'responsables' => Responsable::all(),
-        ]);
+    
+        // Filtro por fecha próxima revisión
+        if ($request->filled('fecha-proxima-revision')) {
+            $query->whereDate('fecha_proxima_revision', $request->input('fecha-proxima-revision'));
+        }
+    
+        // Filtro por categoría
+        if ($request->filled('categoria')) {
+            $query->where('id_categoria', $request->input('categoria'));
+        }
+    
+        // Filtro por código CIE10
+        if ($request->filled('cie10')) {
+            $query->where('id_codigo', $request->input('cie10'));
+        }
+    
+        // Filtro por entidad que resuelve
+        if ($request->filled('entidad')) {
+            $query->where('id_entidad', $request->input('entidad'));
+        }
+    
+        // Filtro por requerimiento
+        if ($request->filled('requerimiento')) {
+            $query->where('id_requerimiento', $request->input('requerimiento'));
+        }
+    
+        // NUEVO: Filtro por responsable
+        if ($request->filled('responsable')) {
+            $query->where('id_responsable', $request->input('responsable'));
+        }
+    
+        $resultados = $query->get();
+    
+        // Debugging mejorado
+        $debugData = [
+            'sql' => $query->toSql(),
+            'bindings' => $query->getBindings(),
+            'request_data' => $request->all(),
+            'resultados_count' => $resultados->count(),
+            'primer_registro' => $resultados->first() ? [
+                'id' => $resultados->first()->id,
+                'rut' => $resultados->first()->rut,
+                'id_categoria' => $resultados->first()->id_categoria,
+                'id_codigo' => $resultados->first()->id_codigo,
+                'id_entidad' => $resultados->first()->id_entidad,
+                'id_requerimiento' => $resultados->first()->id_requerimiento,
+                'id_responsable' => $resultados->first()->id_responsable, // NUEVO
+                'fecha_proxima_revision' => $resultados->first()->fecha_proxima_revision,
+                'requerimiento_relation' => $resultados->first()->requerimiento,
+                'responsable_relation' => $resultados->first()->responsable,
+                'codigo_relation' => $resultados->first()->codigo,
+                'entidad_relation' => $resultados->first()->entidad,
+                'requerimiento_nombre' => $resultados->first()->requerimiento->requerimiento ?? 'N/A',
+                'responsable_nombre' => $resultados->first()->responsable->responsable ?? 'N/A' // NUEVO
+            ] : null
+        ];
+    
+        // Cargar datos para dropdowns
+        $categorias = Categoria::all();
+        $codigo = CodigoCie10::all();
+        $entidades = EntidadQueResuelve::all();
+        $requerimientos = Requerimiento::all();
+        $responsables = Responsable::all();
+    
+        return view('gestionOncologica.gestionCasosOncologicos', compact(
+            'resultados',
+            'categorias',
+            'codigo',
+            'entidades',
+            'requerimientos',
+            'responsables',
+            'debugData'
+        ));
     }
-
-   public function buscarPacientePorRut(Request $request)
-   {
-       $rut = $request->query('rut');
-       $paciente = \App\Models\Paciente::where('rut', $rut)->first();
-
-       if ($paciente) {
-           return response()->json([
-               'success' => true,
-               'paciente' => [
-                   'rut' => $paciente->rut,
-                   'nombre' => $paciente->nombre,
-                   'apellidos' => $paciente->apellidos,
-                   // agrega más campos si necesitas
-               ]
-           ]);
-       } else {
-           return response()->json(['success' => false, 'message' => 'Paciente no encontrado']);
-       }
-   }
-
    public function validarRut(Request $request)
 {
     $rut = $request->input('rut');
