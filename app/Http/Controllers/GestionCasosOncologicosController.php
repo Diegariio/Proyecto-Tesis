@@ -97,7 +97,7 @@ class GestionCasosOncologicosController extends Controller
                     $query->where('rut', 'INEXISTENTE');
                 }
             }
-        }
+}
     
         // Filtros por fechas de creación
         if ($request->filled('fecha-desde')) {
@@ -183,36 +183,37 @@ class GestionCasosOncologicosController extends Controller
             'debugData'
         ));
     }
-   public function validarRut(Request $request)
-{
-    $rut = $request->input('rut');
     
-    // Validar formato de RUT chileno
-    if (!$this->validarFormatoRut($rut)) {
+    public function validarRut(Request $request)
+    {
+        $rut = $request->input('rut');
+        
+        // Validar formato de RUT chileno
+        if (!$this->validarFormatoRut($rut)) {
+            return response()->json([
+                'valido' => false,
+                'mensaje' => 'Formato de RUT inválido'
+            ]);
+        }
+        
+        // Validar que existe en BD
+        $paciente = Paciente::where('rut', $rut)->first();
+        if (!$paciente) {
+            return response()->json([
+                'valido' => false,
+                'mensaje' => 'RUT no encontrado en la base de datos'
+            ]);
+        }
+        
         return response()->json([
-            'valido' => false,
-            'mensaje' => 'Formato de RUT inválido'
+            'valido' => true,
+            'mensaje' => 'RUT válido',
+            'paciente' => [
+                'nombre' => $paciente->nombre,
+                'apellidos' => $paciente->apellidos
+            ]
         ]);
     }
-    
-    // Validar que existe en BD
-    $paciente = Paciente::where('rut', $rut)->first();
-    if (!$paciente) {
-        return response()->json([
-            'valido' => false,
-            'mensaje' => 'RUT no encontrado en la base de datos'
-        ]);
-    }
-    
-    return response()->json([
-        'valido' => true,
-        'mensaje' => 'RUT válido',
-        'paciente' => [
-            'nombre' => $paciente->nombre,
-            'apellidos' => $paciente->apellidos
-        ]
-    ]);
-}
 
 private function validarFormatoRut($rut)
 {
@@ -271,13 +272,71 @@ public function buscarPacientePorRut(Request $request)
             'paciente' => [
                 'rut' => $paciente->rut,
                 'nombre' => $paciente->nombre,
-                'apellidos' => $paciente->primer_apellido . ' ' . $paciente->segundo_apellido
+                'apellidos' => $paciente->primer_apellido . ' ' . $paciente->segundo_apellido,
+                'sexo' => $paciente->sexo ? $paciente->sexo->sexo : 'N/A',
+                'comuna' => $paciente->comuna ? $paciente->comuna->comuna : 'N/A',
+                'servicio_salud' => $paciente->servicio ? $paciente->servicio->servicio_de_salud : 'N/A'
             ]
         ]);
     } else {
         return response()->json([
             'success' => false,
             'mensaje' => 'Paciente no encontrado'
+        ]);
+    }
+}
+
+public function obtenerDetallesRequerimiento($idRegistro)
+{
+    try {
+        $registro = RegistroRequerimiento::with([
+            'paciente.comuna',
+            'paciente.sexo',
+            'paciente.servicio',
+            'categoria',
+            'responsable',
+            'requerimiento',
+            'entidad',
+            'emisor'
+        ])->find($idRegistro);
+        
+        if (!$registro) {
+            return response()->json([
+                'success' => false,
+                'mensaje' => 'Requerimiento no encontrado'
+            ]);
+        }
+        
+        // Información del paciente
+        $paciente = [
+            'rut' => $registro->paciente->rut,
+            'nombre' => $registro->paciente->nombre . ' ' . $registro->paciente->primer_apellido . ' ' . $registro->paciente->segundo_apellido,
+            'sexo' => $registro->paciente->sexo ? $registro->paciente->sexo->sexo : 'N/A',
+            'comuna' => $registro->paciente->comuna ? $registro->paciente->comuna->comuna : 'N/A',
+            'servicio_salud' => $registro->paciente->servicio ? $registro->paciente->servicio->servicio_de_salud : 'N/A'
+        ];
+        
+        // Información del requerimiento
+        $requerimiento = [
+            'fecha_formateada' => $registro->fecha ? \Carbon\Carbon::parse($registro->fecha)->format('d/m/Y') : 'N/A',
+            'responsable' => $registro->responsable ? $registro->responsable->responsable : 'N/A',
+            'categoria' => $registro->categoria ? $registro->categoria->tipo_categoria : 'N/A',
+            'requerimiento' => $registro->requerimiento ? $registro->requerimiento->requerimiento : 'N/A',
+            'emisor' => $registro->emisor ? $registro->emisor->catalogo : 'N/A',
+            'entidad' => $registro->entidad ? $registro->entidad->catalogo : 'N/A'
+        ];
+        
+        return response()->json([
+            'success' => true,
+            'paciente' => $paciente,
+            'requerimiento' => $requerimiento
+        ]);
+        
+    } catch (\Exception $e) {
+        \Log::error('Error al obtener detalles del requerimiento: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'mensaje' => 'Error interno del servidor'
         ]);
     }
 }

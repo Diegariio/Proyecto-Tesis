@@ -154,7 +154,9 @@
                             <tr>
                                 <!-- Acciones -->
                                 <td>
-                                    <button class="btn btn-sm btn-info" title="Ver detalles">
+                                    <button class="btn btn-sm btn-info btn-ver-detalles" 
+                                            title="Ver detalles" 
+                                            data-id="{{ $registro->id_registro_requerimiento }}">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </td>
@@ -248,10 +250,34 @@
       <div class="modal-body">
                 <!-- Aquí van los recuadros de información y el formulario -->
 <div id="info-paciente-modal" class="card mb-3" style="display: none;">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0">
+            <i class="fas fa-user me-2"></i>
+            Ficha del Paciente
+        </h6>
+    </div>
     <div class="card-body">
-        <strong>RUT:</strong> <span id="modal-rut"></span><br>
-        <strong>Nombre:</strong> <span id="modal-nombre"></span><br>
-        <strong>Apellidos:</strong> <span id="modal-apellidos"></span>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-2">
+                    <strong>RUT:</strong> <span id="modal-rut"></span>
+                </div>
+                <div class="mb-2">
+                    <strong>Nombre:</strong> <span id="modal-nombre"></span>
+                </div>
+                <div class="mb-2">
+                    <strong>Sexo:</strong> <span id="modal-sexo"></span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-2">
+                    <strong>Comuna:</strong> <span id="modal-comuna"></span>
+                </div>
+                <div class="mb-2">
+                    <strong>Servicio de Salud:</strong> <span id="modal-servicio"></span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <div id="info-paciente-error" class="alert alert-danger" style="display: none;">
@@ -363,6 +389,139 @@
         </button>
     </div>
 </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Ver Detalles del Requerimiento -->
+<div class="modal fade" id="modalDetallesRequerimiento" tabindex="-1" aria-labelledby="modalDetallesRequerimientoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content shadow-lg">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalDetallesRequerimientoLabel">
+          <i class="fas fa-eye me-2"></i>
+          Detalles del Requerimiento
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Ficha del Paciente -->
+        <div id="info-paciente-detalles" class="card mb-3" style="display: none;">
+          <div class="card-header bg-primary text-white">
+            <h6 class="mb-0">
+              <i class="fas fa-user me-2"></i>
+              Ficha del Paciente
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-2">
+                  <strong>RUT:</strong> <span id="detalles-rut"></span>
+                </div>
+                <div class="mb-2">
+                  <strong>Nombre:</strong> <span id="detalles-nombre"></span>
+                </div>
+                <div class="mb-2">
+                  <strong>Sexo:</strong> <span id="detalles-sexo"></span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-2">
+                  <strong>Comuna:</strong> <span id="detalles-comuna"></span>
+                </div>
+                <div class="mb-2">
+                  <strong>Servicio de Salud:</strong> <span id="detalles-servicio"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Información del Requerimiento -->
+        <div id="info-requerimiento-detalles" class="card mb-3" style="display: none;">
+          <div class="card-header bg-secondary text-white">
+            <h6 class="mb-0">
+              <i class="fas fa-file-medical me-2"></i>
+              Información del Requerimiento
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-4">
+                <div class="mb-2">
+                  <strong>Estado del Requerimiento:</strong><br>
+                  <span id="detalles-estado">En gestión</span>
+                </div>
+                <div class="mb-2">
+                  <strong>Fecha del Requerimiento:</strong><br>
+                  <span id="detalles-fecha-requerimiento"></span>
+                </div>
+                <div class="mb-2">
+                  <strong>Responsable:</strong><br>
+                  <span id="detalles-responsable"></span>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-2">
+                  <strong>Categoría:</strong><br>
+                  <span id="detalles-categoria"></span>
+                </div>
+                <div class="mb-2">
+                  <strong>Requerimiento:</strong><br>
+                  <span id="detalles-requerimiento"></span>
+                </div>
+                <div class="mb-2">
+                  <strong>Fecha de Resolución:</strong><br>
+                  <span id="detalles-fecha-resolucion">------</span>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-2">
+                  <strong>Emisor del Requerimiento:</strong><br>
+                  <span id="detalles-emisor"></span>
+                </div>
+                <div class="mb-2">
+                  <strong>¿Quién Resuelve?:</strong><br>
+                  <span id="detalles-entidad"></span>
+                </div>
+                <div class="mb-2">
+                  <strong>Resolución del Caso:</strong><br>
+                  <span id="detalles-resolucion-caso">------</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="d-flex justify-content-end gap-2 mb-3">
+          <button type="button" class="btn btn-primary" id="btn-agregar-gestion">
+            <i class="fas fa-plus me-1"></i>
+            Agregar Gestión
+          </button>
+          <button type="button" class="btn btn-danger" id="btn-cerrar-requerimiento">
+            <i class="fas fa-lock me-1"></i>
+            Cerrar Requerimiento
+          </button>
+        </div>
+
+        <!-- Tabla de Gestiones (placeholder) -->
+        <div class="card">
+          <div class="card-header bg-light">
+            <h6 class="mb-0">
+              <i class="fas fa-list me-2"></i>
+              Historial de Gestiones
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="alert alert-info mb-0">
+              <i class="fas fa-info-circle me-2"></i>
+              Aquí se mostrará el historial de gestiones del requerimiento.
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -781,7 +940,9 @@ function restaurarTodosLosCie10() {
                     if (data.success) {
                         document.getElementById('modal-rut').textContent = data.paciente.rut;
                         document.getElementById('modal-nombre').textContent = data.paciente.nombre;
-                        document.getElementById('modal-apellidos').textContent = data.paciente.apellidos;
+                        document.getElementById('modal-sexo').textContent = data.paciente.sexo;
+                        document.getElementById('modal-comuna').textContent = data.paciente.comuna;
+                        document.getElementById('modal-servicio').textContent = data.paciente.servicio_salud;
                         document.getElementById('info-paciente-modal').style.display = 'block';
                     } else {
                         document.getElementById('info-paciente-error').style.display = 'block';
@@ -977,6 +1138,75 @@ document.addEventListener('DOMContentLoaded', function() {
             // El formulario se enviará normalmente
             // La SweetAlert se mostrará después del redirect
         });
+    }
+    
+    // Manejar clic en botón de ver detalles (ojo)
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.btn-ver-detalles')) {
+            e.preventDefault();
+            const btn = e.target.closest('.btn-ver-detalles');
+            const idRegistro = btn.getAttribute('data-id');
+            
+            if (idRegistro) {
+                cargarDetallesRequerimiento(idRegistro);
+            }
+        }
+    });
+    
+    // Función para cargar detalles del requerimiento
+    function cargarDetallesRequerimiento(idRegistro) {
+        console.log('Cargando detalles para registro:', idRegistro);
+        
+        // Mostrar indicador de carga
+        document.getElementById('info-paciente-detalles').style.display = 'none';
+        document.getElementById('info-requerimiento-detalles').style.display = 'none';
+        
+        // Hacer petición AJAX para obtener los detalles
+        fetch(`/requerimiento/detalles/${idRegistro}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Datos recibidos:', data);
+                if (data.success) {
+                    // Cargar información del paciente
+                    document.getElementById('detalles-rut').textContent = data.paciente.rut;
+                    document.getElementById('detalles-nombre').textContent = data.paciente.nombre;
+                    document.getElementById('detalles-sexo').textContent = data.paciente.sexo;
+                    document.getElementById('detalles-comuna').textContent = data.paciente.comuna;
+                    document.getElementById('detalles-servicio').textContent = data.paciente.servicio_salud;
+                    document.getElementById('info-paciente-detalles').style.display = 'block';
+                    
+                    // Cargar información del requerimiento
+                    document.getElementById('detalles-fecha-requerimiento').textContent = data.requerimiento.fecha_formateada;
+                    document.getElementById('detalles-responsable').textContent = data.requerimiento.responsable;
+                    document.getElementById('detalles-categoria').textContent = data.requerimiento.categoria;
+                    document.getElementById('detalles-requerimiento').textContent = data.requerimiento.requerimiento;
+                    document.getElementById('detalles-emisor').textContent = data.requerimiento.emisor;
+                    document.getElementById('detalles-entidad').textContent = data.requerimiento.entidad;
+                    document.getElementById('info-requerimiento-detalles').style.display = 'block';
+                    
+                    // Mostrar el modal
+                    var modal = new bootstrap.Modal(document.getElementById('modalDetallesRequerimiento'));
+                    modal.show();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.mensaje || 'No se pudieron cargar los detalles del requerimiento',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar detalles:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de conexión',
+                    text: 'No se pudieron cargar los detalles del requerimiento',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6'
+                });
+            });
     }
 });
 </script>
