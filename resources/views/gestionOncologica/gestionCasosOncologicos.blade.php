@@ -28,7 +28,7 @@
                         <input type="text" id="numero-archivo" name="numero-archivo" class="form-control" placeholder="12345678" maxlength="8" value="{{ request('numero-archivo') }}">
                     </div>
                     <div class="form-group col-md-3" id="grut">
-    <label for="rut-paciente" class="form-label">RUT Paciente</label>
+                        <label for="rut-paciente" class="form-label">RUT Paciente</label>
     <div class="position-relative">
         <input type="text" id="rut-paciente" name="rut-paciente" 
                class="form-control" placeholder="12.345.678-9" 
@@ -37,7 +37,7 @@
             <i class="fas fa-check text-success" id="iconrut" style="display: none;"></i>
         </div>
     </div>
-</div>
+                    </div>
                     <div class="form-group col-md-3">
                         <label for="nombres" class="form-label">Nombres</label>
                         <input type="text" id="nombres" name="nombres" class="form-control" value="{{ request('nombres') }}">
@@ -118,7 +118,7 @@
                         <i class="fas fa-arrow-rotate-left"></i> Limpiar
                     </a>
                     <button type="button" class="btn btn-success" id="btn-agregar-requerimiento" disabled style="opacity: 0.5; pointer-events: none;">
-                    <i class="fas fa-plus-circle"></i> Agregar Nuevo Requerimiento
+                        <i class="fas fa-plus-circle"></i> Agregar Nuevo Requerimiento
                     </button>
                 </div>
             </form>
@@ -127,30 +127,30 @@
 
     @if($resultados->count() > 0)
     <!-- TÍTULO DE RESULTADOS -->
-    <div class="card mt-4">
+        <div class="card mt-4">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0">
                 <i class="fas fa-search me-2"></i>
                 Resultados de la búsqueda ({{ $resultados->count() }} registros encontrados)
             </h5>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
+            <div class="card-body">
+                <div class="table-responsive">
                 <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Acciones</th>
-                            <th>RUT Paciente</th>
-                            <th>Nombre Paciente</th>
-                            <th>Diagnóstico</th>
-                            <th>Fecha Requerimiento</th>
+                        <thead>
+                            <tr>
+                                <th>Acciones</th>
+                                <th>RUT Paciente</th>
+                                <th>Nombre Paciente</th>
+                                <th>Diagnóstico</th>
+                                <th>Fecha Requerimiento</th>
                             <th>Fecha Próxima Revisión</th>
-                            <th>Requerimiento</th>
-                            <th>Responsable</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($resultados as $registro)
+                                <th>Requerimiento</th>
+                                <th>Responsable</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($resultados as $registro)
                             <tr>
                                 <!-- Acciones -->
                                 <td>
@@ -162,7 +162,7 @@
                                 </td>
                                 
                                 <!-- RUT Paciente -->
-                                <td>{{ $registro->paciente->rut ?? 'N/A' }}</td>
+                                        <td>{{ $registro->paciente->rut ?? 'N/A' }}</td>
                                 
                                 <!-- Nombre Paciente -->
                                 <td>
@@ -221,10 +221,10 @@
                                         N/A (ID: {{ $registro->id_responsable }})
                                     @endif
                                 </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                                    </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
             </div>
         </div>
     </div>
@@ -291,8 +291,8 @@
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-    </div>
-@endif
+        </div>
+    @endif
 
 <h5 class="mb-3 text-primary">
     <i class="fas fa-file-medical me-2"></i>
@@ -526,18 +526,18 @@
     </div>
   </div>
 </div>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
     // Formateo de RUT (MANTIENE el original, solo permite K al final)
-    const rutInput = document.getElementById('rut-paciente');
+            const rutInput = document.getElementById('rut-paciente');
     const grut = document.getElementById('grut');
     const iconrut = document.getElementById('iconrut');
     
     let timeoutId;
     let rutValidado = false;
     
-    if (rutInput) {
-        rutInput.addEventListener('input', function (e) {
+            if (rutInput) {
+                rutInput.addEventListener('input', function (e) {
             let value = e.target.value;
             
             // Función para formatear RUT que preserva la K
@@ -660,15 +660,15 @@ document.addEventListener('DOMContentLoaded', function () {
             
             // Formatear el cuerpo del RUT con puntos
             if (cleanValue.length > 0) {
-                let formatted = '';
+                        let formatted = '';
                 let reversed = cleanValue.split('').reverse().join('');
                 
-                for (let i = 0; i < reversed.length; i++) {
-                    if (i !== 0 && i % 3 === 0) {
-                        formatted = '.' + formatted;
-                    }
-                    formatted = reversed[i] + formatted;
-                }
+                        for (let i = 0; i < reversed.length; i++) {
+                            if (i !== 0 && i % 3 === 0) {
+                                formatted = '.' + formatted;
+                            }
+                            formatted = reversed[i] + formatted;
+                        }
                 
                 return formatted + (dvChar ? '-' + dvChar : '');
             } else {
@@ -1206,9 +1206,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     confirmButtonText: 'OK',
                     confirmButtonColor: '#3085d6'
                 });
-            });
-    }
-});
-</script>
+                });
+            }
+        });
+    </script>
 
 @endsection

@@ -42,6 +42,6 @@ class RegistroTratamientoRadioterapiaController extends Controller
         $tratamiento->save();
 
         // 4. Redirigir con mensaje
-        return redirect('/registroTratamientoRadioterapia')->with('success', 'Tratamiento registrado exitosamente.');
+        return redirect()->back()->with('success_alert', 'Registro de tratamiento guardado correctamente');
     }
 }
