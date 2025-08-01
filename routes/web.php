@@ -62,3 +62,9 @@ Route::get('/changepass', function() {
 Route::get('/logout', function() {
     return redirect('/');
 })->name('logout');
+
+
+Route::get('/demo-filtro', function() {
+    return view('demo-filtro');
+})->name('demo-filtro');
+Route::post('/validar-rut', [GestionCasosOncologicosController::class, 'validarRut'])->name('validar.rut');

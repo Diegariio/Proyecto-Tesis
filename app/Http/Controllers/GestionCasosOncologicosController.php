@@ -9,6 +9,7 @@ use App\Models\CodigoCie10;
 use App\Models\EntidadQueResuelve;
 use App\Models\Requerimiento;
 use App\Models\Responsable;
+use App\Models\Paciente;
 
 class GestionCasosOncologicosController extends Controller
 {
@@ -71,4 +72,69 @@ class GestionCasosOncologicosController extends Controller
            return response()->json(['success' => false, 'message' => 'Paciente no encontrado']);
        }
    }
+
+   public function validarRut(Request $request)
+{
+    $rut = $request->input('rut');
+    
+    // Validar formato de RUT chileno
+    if (!$this->validarFormatoRut($rut)) {
+        return response()->json([
+            'valido' => false,
+            'mensaje' => 'Formato de RUT inválido'
+        ]);
+    }
+    
+    // Validar que existe en BD
+    $paciente = Paciente::where('rut', $rut)->first();
+    if (!$paciente) {
+        return response()->json([
+            'valido' => false,
+            'mensaje' => 'RUT no encontrado en la base de datos'
+        ]);
+    }
+    
+    return response()->json([
+        'valido' => true,
+        'mensaje' => 'RUT válido',
+        'paciente' => [
+            'nombre' => $paciente->nombre,
+            'apellidos' => $paciente->apellidos
+        ]
+    ]);
+}
+
+private function validarFormatoRut($rut)
+{
+    // 1. Limpiar el RUT (solo números y K)
+    $rut = preg_replace('/[^0-9kK]/', '', $rut);
+    
+    if (strlen($rut) < 2) return false;
+    
+    // 2. Separar número y dígito verificador
+    $dv = substr($rut, -1);        // Último carácter (DV)
+    $numero = substr($rut, 0, -1); // Todo menos el último (número)
+    
+    // 3. Calcular DV esperado
+    $i = 2;
+    $suma = 0;
+    
+    // Multiplicar cada dígito por su peso (de derecha a izquierda)
+    foreach (array_reverse(str_split($numero)) as $v) {
+        if ($i == 8) $i = 2; // Los pesos van de 2 a 7, luego se repiten
+        $suma += $v * $i;
+        ++$i;
+    }
+    
+    // 4. Calcular DV
+    $dvEsperado = 11 - ($suma % 11);
+    
+    // Casos especiales
+    if ($dvEsperado == 11) $dvEsperado = '0';
+    if ($dvEsperado == 10) $dvEsperado = 'K';
+    else $dvEsperado = (string)$dvEsperado;
+    
+    // 5. Comparar
+    return strtoupper($dv) == $dvEsperado;
+}
 }
