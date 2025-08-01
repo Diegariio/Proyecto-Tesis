@@ -23,6 +23,7 @@ class RegistroRequerimiento extends Model
         'resolucion_caso',
         'fecha_gestion',
         'respuesta',
+        'observaciones',
     ];
 
     public function paciente()

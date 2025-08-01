@@ -267,20 +267,101 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
     </div>
 @endif
+
+<h5 class="mb-3 text-primary">
+    <i class="fas fa-file-medical me-2"></i>
+    Registro del Requerimiento
+</h5>
+
 <form id="form-requerimiento" method="POST" action="{{ route('registroRequerimiento.store') }}">
     @csrf
     <input type="hidden" name="rut" id="input-rut-modal">
-    <!-- Aquí los demás campos: requerimiento, fecha, responsable, etc. -->
-    <div class="mb-3">
-        <label for="requerimiento" class="form-label">Requerimiento</label>
-        <select name="requerimiento" id="requerimiento" class="form-select">
-            @foreach($requerimientos as $req)
-                <option value="{{ $req->id_requerimiento }}">{{ $req->requerimiento }}</option>
-            @endforeach
-        </select>
+    
+    <!-- Primera fila: Categoría, Emisor del Requerimiento, Fecha del Requerimiento -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label for="categoria-modal" class="form-label">Categoría</label>
+            <select name="categoria" id="categoria-modal" class="form-select" required>
+                <option value="">Seleccionar categoría</option>
+                @foreach($categorias as $categoria)
+                    <option value="{{ $categoria->id_categoria }}">{{ $categoria->tipo_categoria }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="emisor-modal" class="form-label">Emisor del Requerimiento</label>
+            <select name="emisor" id="emisor-modal" class="form-select" required>
+                <option value="">Seleccionar emisor</option>
+                @foreach($emisores as $emisor)
+                    <option value="{{ $emisor->id_emisor }}">{{ $emisor->catalogo }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="fecha-requerimiento" class="form-label">Fecha del Requerimiento</label>
+            <input type="date" name="fecha_requerimiento" id="fecha-requerimiento" class="form-control" required>
+        </div>
     </div>
-    <!-- ...otros campos... -->
-    <button type="submit" class="btn btn-primary">Registrar Requerimiento</button>
+    
+    <!-- Segunda fila: Requerimiento, Quien Resuelve, Responsable -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label for="requerimiento-modal" class="form-label">Requerimiento</label>
+            <select name="requerimiento" id="requerimiento-modal" class="form-select" required>
+                <option value="">Seleccionar requerimiento</option>
+                @foreach($requerimientos as $req)
+                    <option value="{{ $req->id_requerimiento }}">{{ $req->requerimiento }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="entidad-modal" class="form-label">Quien Resuelve</label>
+            <select name="entidad" id="entidad-modal" class="form-select" required>
+                <option value="">Seleccionar entidad</option>
+                @foreach($entidades as $entidad)
+                    <option value="{{ $entidad->id_entidad }}">{{ $entidad->catalogo }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="responsable-modal" class="form-label">Responsable</label>
+            <select name="responsable" id="responsable-modal" class="form-select" required>
+                <option value="">Seleccionar responsable</option>
+                @foreach($responsables as $res)
+                    <option value="{{ $res->id_responsable }}">{{ $res->responsable }}</option>
+                @endforeach
+            </select>
+        </div>
+    </div>
+    
+    <!-- Tercera fila: Fecha Próxima Revisión -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label for="fecha-proxima-revision" class="form-label">Fecha Próxima Revisión</label>
+            <input type="date" name="fecha_proxima_revision" id="fecha-proxima-revision" class="form-control" required>
+            <div class="form-text text-muted">
+                <small>Debe ser posterior a la fecha del requerimiento</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tercera fila: Observaciones (solo al final) -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <label for="observaciones" class="form-label">Observaciones</label>
+            <textarea name="observaciones" id="observaciones" class="form-control" rows="3" placeholder="Ingrese observaciones adicionales..."></textarea>
+        </div>
+    </div>
+    
+    <!-- Botones -->
+    <div class="d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary" id="btn-guardar-requerimiento">
+            <i class="fas fa-save me-1"></i> Registrar Requerimiento
+        </button>
+    </div>
 </form>
       </div>
     </div>
@@ -684,14 +765,19 @@ function restaurarTodosLosCie10() {
     if (btnAgregar && rutInput) {
         btnAgregar.addEventListener('click', function() {
             const rut = rutInput.value.trim();
+            console.log('RUT a buscar:', rut);
             document.getElementById('input-rut-modal').value = rut;
 
             document.getElementById('info-paciente-modal').style.display = 'none';
             document.getElementById('info-paciente-error').style.display = 'none';
 
             fetch(`/paciente/buscar?rut=${encodeURIComponent(rut)}`)
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Datos recibidos:', data);
                     if (data.success) {
                         document.getElementById('modal-rut').textContent = data.paciente.rut;
                         document.getElementById('modal-nombre').textContent = data.paciente.nombre;
@@ -703,7 +789,8 @@ function restaurarTodosLosCie10() {
                     var modal = new bootstrap.Modal(document.getElementById('modalRequerimiento'));
                     modal.show();
                 })
-                .catch(() => {
+                .catch((error) => {
+                    console.error('Error al buscar paciente:', error);
                     document.getElementById('info-paciente-error').style.display = 'block';
                     var modal = new bootstrap.Modal(document.getElementById('modalRequerimiento'));
                     modal.show();
@@ -793,6 +880,104 @@ function mostrarErrorCampo(mensaje) {
 // Llamar la función al cargar
 document.addEventListener('DOMContentLoaded', function() {
     validarCamposTexto();
+    
+    // Establecer fecha actual por defecto en el modal
+    const fechaRequerimiento = document.getElementById('fecha-requerimiento');
+    const fechaProximaRevision = document.getElementById('fecha-proxima-revision');
+    
+    if (fechaRequerimiento) {
+        const hoy = new Date().toISOString().split('T')[0];
+        fechaRequerimiento.value = hoy;
+        
+        // Establecer fecha mínima para próxima revisión (mañana)
+        const manana = new Date();
+        manana.setDate(manana.getDate() + 1);
+        const mananaFormato = manana.toISOString().split('T')[0];
+        
+        if (fechaProximaRevision) {
+            fechaProximaRevision.min = mananaFormato;
+            fechaProximaRevision.value = mananaFormato;
+        }
+    }
+    
+    // Validación de fechas en el modal
+    if (fechaRequerimiento && fechaProximaRevision) {
+        fechaRequerimiento.addEventListener('change', function() {
+            const fechaReq = this.value;
+            if (fechaReq) {
+                // Establecer fecha mínima para próxima revisión
+                const fechaMinima = new Date(fechaReq);
+                fechaMinima.setDate(fechaMinima.getDate() + 1);
+                const fechaMinimaFormato = fechaMinima.toISOString().split('T')[0];
+                
+                fechaProximaRevision.min = fechaMinimaFormato;
+                
+                // Si la fecha de próxima revisión es menor que la nueva fecha mínima, actualizarla
+                if (fechaProximaRevision.value && fechaProximaRevision.value < fechaMinimaFormato) {
+                    fechaProximaRevision.value = fechaMinimaFormato;
+                }
+            }
+        });
+        
+        fechaProximaRevision.addEventListener('change', function() {
+            const fechaRevision = this.value;
+            const fechaReq = fechaRequerimiento.value;
+            
+            if (fechaRevision && fechaReq && fechaRevision <= fechaReq) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Fecha inválida',
+                    text: 'La fecha de próxima revisión debe ser posterior a la fecha del requerimiento.',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#3085d6',
+                    customClass: {
+                        popup: 'swal2-custom-popup',
+                        title: 'swal2-custom-title',
+                        content: 'swal2-custom-content',
+                        confirmButton: 'swal2-custom-button'
+                    }
+                });
+                
+                // Resetear a la fecha mínima válida
+                const fechaMinima = new Date(fechaReq);
+                fechaMinima.setDate(fechaMinima.getDate() + 1);
+                const fechaMinimaFormato = fechaMinima.toISOString().split('T')[0];
+                this.value = fechaMinimaFormato;
+            }
+        });
+    }
+    
+    // Mostrar SweetAlert de éxito si existe mensaje de sesión
+    @if(session('success_alert'))
+        Swal.fire({
+            icon: 'success',
+            title: '¡Éxito!',
+            text: '{{ session('success_alert') }}',
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#00a65a',
+            customClass: {
+                popup: 'swal2-custom-popup',
+                title: 'swal2-custom-title',
+                content: 'swal2-custom-content',
+                confirmButton: 'swal2-custom-button'
+            }
+        });
+    @endif
+    
+    // Manejar el envío del formulario
+    const formRequerimiento = document.getElementById('form-requerimiento');
+    const btnGuardar = document.getElementById('btn-guardar-requerimiento');
+    
+    if (formRequerimiento && btnGuardar) {
+        formRequerimiento.addEventListener('submit', function(e) {
+            // Mostrar indicador de carga
+            btnGuardar.disabled = true;
+            btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Guardando...';
+            
+            // El formulario se enviará normalmente
+            // La SweetAlert se mostrará después del redirect
+        });
+    }
 });
 </script>
 

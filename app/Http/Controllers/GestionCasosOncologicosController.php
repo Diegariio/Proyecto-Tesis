@@ -10,6 +10,7 @@ use App\Models\EntidadQueResuelve;
 use App\Models\Requerimiento;
 use App\Models\Responsable;
 use App\Models\Paciente;
+use App\Models\EmisorRequerimiento;
 
 class GestionCasosOncologicosController extends Controller
 {
@@ -169,6 +170,7 @@ class GestionCasosOncologicosController extends Controller
         $entidades = EntidadQueResuelve::all();
         $requerimientos = Requerimiento::all();
         $responsables = Responsable::all();
+        $emisores = EmisorRequerimiento::all();
     
         return view('gestionOncologica.gestionCasosOncologicos', compact(
             'resultados',
@@ -177,6 +179,7 @@ class GestionCasosOncologicosController extends Controller
             'entidades',
             'requerimientos',
             'responsables',
+            'emisores',
             'debugData'
         ));
     }
@@ -243,5 +246,39 @@ private function validarFormatoRut($rut)
     
     // 5. Comparar
     return strtoupper($dv) == $dvEsperado;
+}
+
+public function buscarPacientePorRut(Request $request)
+{
+    $rut = $request->input('rut') ?? $request->query('rut');
+    
+    \Log::info('Buscando paciente con RUT: ' . $rut);
+    
+    if (!$rut) {
+        return response()->json([
+            'success' => false,
+            'mensaje' => 'RUT no proporcionado'
+        ]);
+    }
+    
+    $paciente = Paciente::where('rut', $rut)->first();
+    
+    \Log::info('Paciente encontrado: ' . ($paciente ? 'SÍ' : 'NO'));
+    
+    if ($paciente) {
+        return response()->json([
+            'success' => true,
+            'paciente' => [
+                'rut' => $paciente->rut,
+                'nombre' => $paciente->nombre,
+                'apellidos' => $paciente->primer_apellido . ' ' . $paciente->segundo_apellido
+            ]
+        ]);
+    } else {
+        return response()->json([
+            'success' => false,
+            'mensaje' => 'Paciente no encontrado'
+        ]);
+    }
 }
 }

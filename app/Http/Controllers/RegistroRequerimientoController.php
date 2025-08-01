@@ -10,12 +10,17 @@ class RegistroRequerimientoController extends Controller
 {
     public function store(Request $request)
     {   
-
         // Validar los datos recibidos
         $request->validate([
             'rut' => 'required|exists:paciente,rut',
+            'categoria' => 'required|exists:categoria,id_categoria',
+            'emisor' => 'required|exists:emisor_requerimiento,id_emisor',
+            'fecha_requerimiento' => 'required|date',
+            'fecha_proxima_revision' => 'required|date|after:fecha_requerimiento',
             'requerimiento' => 'required|exists:requerimiento,id_requerimiento',
-            // Agrega aquí las validaciones de los otros campos del formulario
+            'entidad' => 'required|exists:entidad_que_resuelve,id_entidad',
+            'responsable' => 'required|exists:responsable,id_responsable',
+            'observaciones' => 'nullable|string|max:500'
         ]);
 
         // Buscar el paciente por RUT
@@ -23,17 +28,23 @@ class RegistroRequerimientoController extends Controller
 
         // Crear el registro de requerimiento
         $registro = new RegistroRequerimiento();
-        $registro->rut = $paciente->rut; // Ajusta el nombre del campo si es necesario
+        $registro->rut = $paciente->rut;
         $registro->id_requerimiento = $request->requerimiento;
-        $registro->id_codigo = 1; 
-        $registro->id_gestion= 1; 
-        $registro->id_categoria= 1; 
-        $registro->id_responsable= 1; 
+        $registro->id_categoria = $request->categoria;
+        $registro->id_responsable = $request->responsable;
+        $registro->id_entidad = $request->entidad;
+        $registro->id_emisor = $request->emisor;
+        $registro->fecha = $request->fecha_requerimiento;
+        $registro->fecha_proxima_revision = $request->fecha_proxima_revision;
+        $registro->observaciones = $request->observaciones;
+        
+        // Valores por defecto para campos requeridos por la BD
+        $registro->id_codigo = 1; // Valor por defecto
+        $registro->id_gestion = 1; // Valor por defecto
 
-        // Asigna aquí los otros campos del formulario
         $registro->save();
 
-        // Redirigir o mostrar mensaje de éxito
-        return redirect()->back()->with('success', 'Requerimiento registrado correctamente');
+        // Redirigir con mensaje de éxito para SweetAlert
+        return redirect()->back()->with('success_alert', 'Requerimiento registrado correctamente');
     }
 }
