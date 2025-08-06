@@ -18,7 +18,6 @@ return new class extends Migration
             $table->unsignedBigInteger('id_respuesta');
             $table->string('estado_gestion')->default('PENDIENTE');
             $table->date('fecha_gestion');
-            $table->text('respuesta')->nullable();
             $table->timestamps();
             
             // Foreign keys

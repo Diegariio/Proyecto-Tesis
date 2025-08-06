@@ -69,3 +69,8 @@ Route::get('/demo-filtro', function() {
 Route::post('/validar-rut', [GestionCasosOncologicosController::class, 'validarRut'])->name('validar.rut');
 Route::post('/obtener-cie10-por-rut', [GestionCasosOncologicosController::class, 'obtenerCie10PorRut'])->name('obtenerCie10PorRut');
 Route::get('/requerimiento/detalles/{id}', [GestionCasosOncologicosController::class, 'obtenerDetallesRequerimiento'])->name('requerimiento.detalles');
+Route::get('/caso-oncologico/info', [GestionCasosOncologicosController::class, 'infoCasoOncologico']);
+Route::get('/requerimiento/diagnostico-resolucion/{id}', [GestionCasosOncologicosController::class, 'diagnosticoResolucion']);
+Route::post('/gestion-requerimiento/guardar', [GestionCasosOncologicosController::class, 'guardarGestionRequerimiento']);
+Route::get('/gestiones/opciones', [GestionCasosOncologicosController::class, 'opcionesGestion']);
+Route::get('/respuestas/opciones', [GestionCasosOncologicosController::class, 'opcionesRespuesta']);

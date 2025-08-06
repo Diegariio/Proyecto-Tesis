@@ -125,7 +125,7 @@
                     <i class="fas fa-filter"></i> Filtrar
                 </button>
                 
-                <button type="button" class="btn btn-secondary">
+                <button type="button" class="btn btn-secondary" id="btn-limpiar-filtros">
                     <i class="fas fa-eraser"></i> Limpiar
                 </button>
                 
@@ -235,7 +235,6 @@
         </div>
     </div>
 @endif
-
 <div class="modal fade" id="modalRequerimiento" tabindex="-1" aria-labelledby="modalRequerimientoLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl"> <!-- Cambiado a modal-xl -->
     <div class="modal-content shadow-lg"> <!-- Sombra extra -->
@@ -278,6 +277,22 @@
 </div>
 <div id="info-paciente-error" class="alert alert-danger" style="display: none;">
     Paciente no encontrado.
+</div>
+<div id="info-caso" class="card mb-3" style="display: none;">
+    <div class="card-header bg-info text-white">
+        <h6 class="mb-0">
+            <i class="fas fa-notes-medical me-2"></i>
+            Información del caso oncológico
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="mb-2">
+            <strong>Diagnóstico CIE10:</strong> <span id="modal-cie10"></span>
+        </div>
+        <div class="mb-2">
+            <strong>Resolución Comité:</strong> <span id="modal-resolucion-comite"></span>
+        </div>
+    </div>
 </div>
         <div id="info-caso" class="mb-3">
           <!-- Recuadro de información del caso oncológico (rellenar con datos) -->
@@ -458,6 +473,14 @@
                   <strong>Responsable:</strong><br>
                   <span id="detalles-responsable"></span>
                 </div>
+                <div class="mb-2">
+                  <strong>Fecha de Próxima Revisión:</strong><br>
+                  <span id="detalles-fecha-proxima-revision"></span>
+                </div>
+                <div class="mb-2">
+                  <strong>Observaciones:</strong><br>
+                  <span id="detalles-observaciones"></span>
+                </div>
               </div>
               <div class="col-md-4">
                 <div class="mb-2">
@@ -493,7 +516,7 @@
 
         <!-- Botones de Acción -->
         <div class="d-flex justify-content-end gap-2 mb-3">
-          <button type="button" class="btn btn-primary" id="btn-agregar-gestion">
+          <button type="button" class="btn btn-primary" id="btn-agregar-gestion" data-id="">
             <i class="fas fa-plus me-1"></i>
             Agregar Gestión
           </button>
@@ -522,6 +545,48 @@
     </div>
   </div>
 </div>
+
+<!-- Modal: Registrar Gestión Realizada -->
+<div class="modal fade" id="modalAgregarGestion" tabindex="-1" aria-labelledby="modalAgregarGestionLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <form id="form-agregar-gestion">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="modalAgregarGestionLabel">Registrar Gestión Realizada</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="fecha-gestion" class="form-label">Fecha de Gestión</label>
+            <input type="date" class="form-control" id="fecha-gestion" name="fecha_gestion" required>
+          </div>
+          <div class="mb-3">
+            <label for="gestion-realizada" class="form-label">Gestión Realizada</label>
+            <select class="form-select" id="gestion-realizada" name="id_gestion" required>
+              <option value="">Seleccione una opción</option>
+              <!-- Opciones dinámicas -->
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="respuesta" class="form-label">Respuesta</label>
+            <select class="form-select" id="respuesta" name="id_respuesta">
+              <option value="">Seleccione una opción</option>
+              <!-- Opciones dinámicas -->
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-success">Registrar Gestión Realizada</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<style>
+  .modal-backdrop.show { background-color: #222 !important; opacity: 0.95 !important; }
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // ===== VARIABLES GLOBALES =====
@@ -733,6 +798,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectCie10 = document.getElementById('cie10');
         const todasLasOpciones = selectCie10.querySelectorAll('option');
         
+        // Obtener el valor previo (del request de Laravel)
+        const valorPrevio = selectCie10.value || '{{ request("cie10") }}' || '';
+        
         // Obtener los IDs de los códigos encontrados
         const codigosIds = codigosEncontrados.map(codigo => codigo.id_codigo);
         
@@ -747,20 +815,34 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Limpiar la selección actual
-        selectCie10.value = '';
+        // Mantener la selección previa si existe y está disponible en las opciones filtradas
+        if (valorPrevio && codigosIds.includes(parseInt(valorPrevio))) {
+            selectCie10.value = valorPrevio;
+            console.log('Manteniendo selección previa de CIE10:', valorPrevio);
+        } else {
+            // Solo limpiar si no hay valor previo válido
+            selectCie10.value = '';
+        }
     }
 
     function restaurarTodosLosCie10() {
         const selectCie10 = document.getElementById('cie10');
         const todasLasOpciones = selectCie10.querySelectorAll('option');
         
+        // Obtener el valor previo (del request de Laravel)
+        const valorPrevio = '{{ request("cie10") }}' || '';
+        
         todasLasOpciones.forEach(option => {
             option.style.display = '';
         });
         
-        // Limpiar la selección actual
-        selectCie10.value = '';
+        // Mantener la selección previa si existe, de lo contrario limpiar
+        if (valorPrevio) {
+            selectCie10.value = valorPrevio;
+            console.log('Restaurando selección previa de CIE10:', valorPrevio);
+        } else {
+            selectCie10.value = '';
+        }
     }
 
     // ===== VALIDACIÓN DE CAMPOS =====
@@ -812,19 +894,17 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnAgregar && rutInput) {
         btnAgregar.addEventListener('click', function() {
             const rut = rutInput.value.trim();
-            console.log('RUT a buscar:', rut);
             document.getElementById('input-rut-modal').value = rut;
 
+            // Ocultar recuadros antes de cargar
             document.getElementById('info-paciente-modal').style.display = 'none';
             document.getElementById('info-paciente-error').style.display = 'none';
+            document.getElementById('info-caso').style.display = 'none';
 
+            // Buscar datos del paciente
             fetch(`/paciente/buscar?rut=${encodeURIComponent(rut)}`)
-                .then(response => {
-                    console.log('Response status:', response.status);
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
-                    console.log('Datos recibidos:', data);
                     if (data.success) {
                         document.getElementById('modal-rut').textContent = data.paciente.rut;
                         document.getElementById('modal-nombre').textContent = data.paciente.nombre;
@@ -835,12 +915,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     } else {
                         document.getElementById('info-paciente-error').style.display = 'block';
                     }
+
+                    // Buscar información del caso oncológico
+                    fetch(`/caso-oncologico/info?rut=${encodeURIComponent(rut)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success && data.diagnosticos.length > 0) {
+                                document.getElementById('modal-cie10').textContent = data.diagnosticos[0].codigo + ' - ' + data.diagnosticos[0].descripcion;
+                                document.getElementById('modal-resolucion-comite').textContent = data.diagnosticos[0].resolucion_comite;
+                                document.getElementById('info-caso').style.display = 'block';
+                            } else {
+                                document.getElementById('modal-cie10').textContent = '';
+                                document.getElementById('modal-resolucion-comite').textContent = '';
+                                document.getElementById('info-caso').style.display = 'none';
+                            }
+                        });
+
+                    // Mostrar el modal
                     var modal = new bootstrap.Modal(document.getElementById('modalRequerimiento'));
                     modal.show();
                 })
                 .catch((error) => {
                     console.error('Error al buscar paciente:', error);
                     document.getElementById('info-paciente-error').style.display = 'block';
+                    document.getElementById('info-caso').style.display = 'none';
                     var modal = new bootstrap.Modal(document.getElementById('modalRequerimiento'));
                     modal.show();
                 });
@@ -961,10 +1059,216 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // ===== VALIDACIÓN INICIAL DE RUT =====
-    var rutInputValidacion = document.getElementById('rut_paciente');
+    // ===== VALIDACIÓN INICIAL DE RUT Y CIE10 =====
+    // Validar RUT si tiene valor al cargar la página (después de filtrar)
+    var rutInputValidacion = document.getElementById('rut-paciente');
+    var cie10Seleccionado = '{{ request("cie10") }}';
+    
     if (rutInputValidacion && rutInputValidacion.value.trim() !== '') {
+        console.log('Revalidando RUT al cargar página:', rutInputValidacion.value);
         validarRut(rutInputValidacion.value.trim());
+        
+        // También recargar CIE10 si el RUT es válido
+        setTimeout(() => {
+            if (rutValidado) {
+                obtenerCie10PorRut(rutInputValidacion.value.trim());
+            }
+        }, 500);
+    } else if (cie10Seleccionado) {
+        // Si hay un CIE10 seleccionado pero no hay RUT, asegurar que esté visible
+        console.log('Manteniendo CIE10 seleccionado sin RUT:', cie10Seleccionado);
+        const selectCie10 = document.getElementById('cie10');
+        if (selectCie10) {
+            selectCie10.value = cie10Seleccionado;
+        }
+    }
+
+    // ===== BOTÓN LIMPIAR FILTROS =====
+    const btnLimpiar = document.getElementById('btn-limpiar-filtros');
+    if (btnLimpiar) {
+        btnLimpiar.addEventListener('click', function() {
+            // Limpiar todos los campos del formulario
+            document.getElementById('fecha-desde').value = '';
+            document.getElementById('fecha-hasta').value = '';
+            document.getElementById('numero-archivo').value = '';
+            document.getElementById('rut-paciente').value = '';
+            document.getElementById('nombres').value = '';
+            document.getElementById('primer-apellido').value = '';
+            document.getElementById('segundo-apellido').value = '';
+            document.getElementById('categoria').value = '';
+            document.getElementById('cie10').value = '';
+            document.getElementById('entidad').value = '';
+            document.getElementById('requerimiento').value = '';
+            document.getElementById('fecha-revision').value = '';
+            document.getElementById('responsable').value = '';
+
+            // Resetear validación del RUT
+            rutValidado = false;
+            resetearEstilo();
+            
+            // Restaurar todas las opciones del CIE10
+            restaurarTodosLosCie10();
+            
+            // Verificar estado de campos
+            checkFields();
+            
+            console.log('Filtros limpiados');
+        });
+    }
+
+    // ===== AGREGAR GESTIÓN =====
+    let idRequerimientoActual = null;
+
+    // Event listener para el botón agregar gestión
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('#btn-agregar-gestion');
+        if (btn) {
+            idRequerimientoActual = btn.getAttribute('data-id');
+            cargarOpcionesGestion();
+            cargarOpcionesRespuesta();
+            document.getElementById('form-agregar-gestion').reset();
+            
+            // Establecer fecha actual por defecto
+            document.getElementById('fecha-gestion').value = new Date().toISOString().split('T')[0];
+
+            var modal = new bootstrap.Modal(document.getElementById('modalAgregarGestion'));
+            modal.show();
+        }
+    });
+
+    // Event listener para el formulario de agregar gestión
+    document.getElementById('form-agregar-gestion').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        console.log('Enviando formulario de gestión...');
+        console.log('ID Requerimiento Actual:', idRequerimientoActual);
+        
+        if (!idRequerimientoActual) {
+            mostrarAlerta('error', 'No se ha seleccionado un requerimiento válido');
+            return;
+        }
+        
+        const formData = new FormData(this);
+        formData.append('id_registro_requerimiento', idRequerimientoActual);
+        
+        // Debug: mostrar todos los datos del formulario
+        for (let [key, value] of formData.entries()) {
+            console.log('FormData:', key, value);
+        }
+        
+        fetch('/gestion-requerimiento/guardar', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data);
+            if (data.success) {
+                // Cerrar modal
+                var modal = bootstrap.Modal.getInstance(document.getElementById('modalAgregarGestion'));
+                modal.hide();
+                
+                // Mostrar mensaje de éxito
+                mostrarAlerta('success', data.message || 'Gestión guardada correctamente');
+                
+                // Recargar detalles del requerimiento
+                cargarDetallesRequerimiento(idRequerimientoActual);
+            } else {
+                let mensaje = data.message || 'Error al guardar la gestión';
+                
+                // Si hay información de debug, mostrarla en consola
+                if (data.debug) {
+                    console.log('Debug info:', data.debug);
+                    mensaje += '\n\nInfo de debug en consola para desarrollador.';
+                }
+                
+                mostrarAlerta('error', mensaje);
+            }
+        })
+        .catch(error => {
+            console.error('Error completo:', error);
+            mostrarAlerta('error', 'Error al conectar con el servidor: ' + error.message);
+        });
+    });
+
+    // ===== FUNCIONES PARA CARGAR OPCIONES =====
+    function cargarOpcionesGestion() {
+        console.log('Cargando opciones de gestión...');
+        fetch('/gestiones/opciones')
+            .then(response => {
+                console.log('Response gestiones:', response);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Data gestiones:', data);
+                const select = document.getElementById('gestion-realizada');
+                select.innerHTML = '<option value="">Seleccione una opción</option>';
+                
+                if (data.success && data.gestiones) {
+                    data.gestiones.forEach(gestion => {
+                        const option = document.createElement('option');
+                        option.value = gestion.id_gestion;
+                        option.textContent = gestion.gestion;
+                        select.appendChild(option);
+                    });
+                } else {
+                    console.error('Error en respuesta de gestiones:', data);
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar gestiones:', error);
+                mostrarAlerta('error', 'Error al cargar opciones de gestión');
+            });
+    }
+
+    function cargarOpcionesRespuesta() {
+        console.log('Cargando opciones de respuesta...');
+        fetch('/respuestas/opciones')
+            .then(response => {
+                console.log('Response respuestas:', response);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Data respuestas:', data);
+                const select = document.getElementById('respuesta');
+                select.innerHTML = '<option value="">Seleccione una opción</option>';
+                
+                if (data.success && data.respuestas) {
+                    data.respuestas.forEach(respuesta => {
+                        const option = document.createElement('option');
+                        option.value = respuesta.id_respuesta;
+                        option.textContent = respuesta.respuesta;
+                        select.appendChild(option);
+                    });
+                } else {
+                    console.error('Error en respuesta de respuestas:', data);
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar respuestas:', error);
+                mostrarAlerta('error', 'Error al cargar opciones de respuesta');
+            });
+    }
+
+    // ===== FUNCIÓN PARA MOSTRAR ALERTAS =====
+    function mostrarAlerta(tipo, mensaje) {
+        const icono = tipo === 'success' ? 'success' : 'error';
+        const titulo = tipo === 'success' ? '¡Éxito!' : 'Error';
+        
+        Swal.fire({
+            icon: icono,
+            title: titulo,
+            text: mensaje,
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#3085d6'
+            // Se eliminó timer y timerProgressBar para que solo se cierre al hacer clic en "Aceptar"
+        });
     }
 });
 
@@ -1075,7 +1379,13 @@ function cargarDetallesRequerimiento(idRegistro) {
                 document.getElementById('detalles-requerimiento').textContent = data.requerimiento.requerimiento;
                 document.getElementById('detalles-emisor').textContent = data.requerimiento.emisor;
                 document.getElementById('detalles-entidad').textContent = data.requerimiento.entidad;
+                document.getElementById('detalles-resolucion-caso').textContent = data.requerimiento.resolucion_caso;
+                document.getElementById('detalles-fecha-proxima-revision').textContent = data.requerimiento.fecha_proxima_revision_formateada;
+                document.getElementById('detalles-observaciones').textContent = data.requerimiento.observaciones;
                 document.getElementById('info-requerimiento-detalles').style.display = 'block';
+                
+                // Asignar el ID del registro al botón de agregar gestión
+                document.getElementById('btn-agregar-gestion').setAttribute('data-id', idRegistro);
                 
                 // Mostrar el modal
                 var modal = new bootstrap.Modal(document.getElementById('modalDetallesRequerimiento'));

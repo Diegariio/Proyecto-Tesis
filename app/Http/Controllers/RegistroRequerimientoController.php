@@ -34,14 +34,11 @@ class RegistroRequerimientoController extends Controller
         $registro->id_responsable = $request->responsable;
         $registro->id_entidad = $request->entidad;
         $registro->id_emisor = $request->emisor;
-        $registro->fecha = $request->fecha_requerimiento;
+        $registro->fecha = $request->fecha_requerimiento; 
         $registro->fecha_proxima_revision = $request->fecha_proxima_revision;
         $registro->observaciones = $request->observaciones;
-        
-        // Valores por defecto para campos requeridos por la BD
+        $registro->id_cierre_requerimiento = 1;
         $registro->id_codigo = 1; // Valor por defecto
-        $registro->id_gestion = 1; // Valor por defecto
-
         $registro->save();
 
         // Redirigir con mensaje de éxito para SweetAlert

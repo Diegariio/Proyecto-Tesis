@@ -12,7 +12,7 @@ class GestionRequerimientoSeeder extends Seeder
 {
     public function run(): void
     {
-        //
+        
 
     }
 }

@@ -12,6 +12,9 @@ use App\Models\Responsable;
 use App\Models\Paciente;
 use App\Models\EmisorRequerimiento;
 use App\Models\Tiene;
+use App\Models\GestionRequerimiento;
+use App\Models\ResolucionComite;
+
 class GestionCasosOncologicosController extends Controller
 {
     public function obtenerCie10PorRut(Request $request)
@@ -285,7 +288,25 @@ public function buscarPacientePorRut(Request $request)
         ]);
     }
 }
+public function infoCasoOncologico(Request $request)
+{
+    $rut = $request->query('rut');
+    $tienes = \App\Models\Tiene::where('rut', $rut)->with('codigo')->get();
 
+    $diagnosticos = $tienes->map(function($tiene) {
+        $resolucion = \App\Models\ResolucionComite::where('id_tiene', $tiene->id_tiene)->first();
+        return [
+            'codigo' => $tiene->codigo->codigo_cie10 ?? '',
+            'descripcion' => $tiene->codigo->descripcion ?? '',
+            'resolucion_comite' => $resolucion ? $resolucion->resolucion_comite : 'Sin resolución'
+        ];
+    });
+
+    return response()->json([
+        'success' => true,
+        'diagnosticos' => $diagnosticos
+    ]);
+}
 public function obtenerDetallesRequerimiento($idRegistro)
 {
     try {
@@ -323,7 +344,10 @@ public function obtenerDetallesRequerimiento($idRegistro)
             'categoria' => $registro->categoria ? $registro->categoria->tipo_categoria : 'N/A',
             'requerimiento' => $registro->requerimiento ? $registro->requerimiento->requerimiento : 'N/A',
             'emisor' => $registro->emisor ? $registro->emisor->catalogo : 'N/A',
-            'entidad' => $registro->entidad ? $registro->entidad->catalogo : 'N/A'
+            'entidad' => $registro->entidad ? $registro->entidad->catalogo : 'N/A',
+            'resolucion_caso' => '', // Si tienes este campo, puedes llenarlo aquí
+            'fecha_proxima_revision_formateada' => $registro->fecha_proxima_revision ? \Carbon\Carbon::parse($registro->fecha_proxima_revision)->format('d/m/Y') : 'N/A',
+            'observaciones' => $registro->observaciones ?? 'N/A',
         ];
         
         return response()->json([
@@ -339,5 +363,103 @@ public function obtenerDetallesRequerimiento($idRegistro)
             'mensaje' => 'Error interno del servidor'
         ]);
     }
+}
+public function diagnosticoResolucion($id)
+{
+    $registro = RegistroRequerimiento::find($id);
+    if (!$registro) {
+        return response()->json(['diagnostico' => '', 'resolucion' => '']);
+    }
+    $cie10 = odigoCie10::find($registro->id_codigo);
+    $diagnostico = $cie10 ? ($cie10->codigo_cie10 . ' - ' . $cie10->descripcion) : '';
+    $tiene = Tiene::where('rut', $registro->rut)->where('id_codigo', $registro->id_codigo)->first();
+    $resolucion = '';
+    if ($tiene) {
+        $res = ResolucionComite::where('id_tiene', $tiene->id_tiene)->first();
+        $resolucion = $res ? $res->resolucion_comite : '';
+    }
+    return response()->json(['diagnostico' => $diagnostico, 'resolucion' => $resolucion]);
+}
+public function guardarGestionRequerimiento(Request $request)
+{
+    try {
+        // Validar los datos de entrada
+        $request->validate([
+            'id_registro_requerimiento' => 'required|integer',
+            'fecha_gestion' => 'required|date',
+            'id_gestion' => 'required|integer',
+            'id_respuesta' => 'nullable|integer'
+        ]);
+
+        $idRegistro = $request->input('id_registro_requerimiento');
+        $fechaGestion = $request->input('fecha_gestion');
+        $idGestion = $request->input('id_gestion');
+        $idRespuesta = $request->input('id_respuesta');
+
+        // Buscar el registro de requerimiento
+        $registro = \App\Models\RegistroRequerimiento::find($idRegistro);
+        if (!$registro) {
+            return response()->json(['success' => false, 'message' => 'Registro de requerimiento no encontrado']);
+        }
+
+        \Log::info('Registro encontrado:', [
+            'id' => $registro->id_registro_requerimiento,
+            'rut' => $registro->rut,
+            'id_codigo' => $registro->id_codigo
+        ]);
+
+        // Crear la gestión de requerimiento directamente
+        // No necesitamos buscar en la tabla "tiene" para este proceso
+        $gestionRequerimiento = new \App\Models\GestionRequerimiento();
+        $gestionRequerimiento->id_registro_requerimiento = $idRegistro;
+        $gestionRequerimiento->id_gestion = $idGestion;
+        $gestionRequerimiento->id_respuesta = $idRespuesta; // Puede ser null
+        $gestionRequerimiento->fecha_gestion = $fechaGestion;
+        $gestionRequerimiento->estado_gestion = 'PENDIENTE'; // Valor por defecto
+        // El campo 'respuesta' (texto) se deja null por ahora
+        $gestionRequerimiento->save();
+
+        \Log::info('Gestión de requerimiento guardada:', [
+            'id_gestion_requerimiento' => $gestionRequerimiento->id_gestion_requerimiento,
+            'id_registro_requerimiento' => $idRegistro,
+            'id_gestion' => $idGestion,
+            'id_respuesta' => $idRespuesta,
+            'fecha_gestion' => $fechaGestion
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Gestión guardada correctamente']);
+
+    } catch (\Exception $e) {
+        \Log::error('Error al guardar gestión: ' . $e->getMessage());
+        return response()->json(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()]);
+    }
+}
+
+public function opcionesGestion()
+{
+    $gestiones = \App\Models\Gestion::all(['id_gestion', 'gestion']);
+    
+    return response()->json([
+        'success' => true,
+        'gestiones' => $gestiones
+    ]);
+}
+
+public function opcionesRespuesta()
+{
+    $respuestas = \App\Models\Respuesta::all(['id_respuesta', 'catalogo_respuestas']);
+    
+    // Mapear el campo para que el frontend reciba 'respuesta'
+    $respuestasFormateadas = $respuestas->map(function($respuesta) {
+        return [
+            'id_respuesta' => $respuesta->id_respuesta,
+            'respuesta' => $respuesta->catalogo_respuestas
+        ];
+    });
+    
+    return response()->json([
+        'success' => true,
+        'respuestas' => $respuestasFormateadas
+    ]);
 }
 }

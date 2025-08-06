@@ -15,7 +15,6 @@ class GestionRequerimiento extends Model
         'id_respuesta',
         'estado_gestion',
         'fecha_gestion',
-        'respuesta'
     ];
     
     protected $casts = [
