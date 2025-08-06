@@ -1,31 +1,49 @@
 # Dockerfile para Laravel con Apache
 FROM php:8.2-apache
 
-# Instalar dependencias del sistema con manejo de errores mejorado
-RUN apt-get clean && \
-    apt-get update --fix-missing && \
+# Configurar variables de entorno
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=America/Santiago
+
+# Instalar dependencias del sistema con múltiples intentos y mejor manejo de errores
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    for i in 1 2 3 4 5; do \
+        echo "Intento $i de instalación de dependencias..." && \
+        apt-get update --fix-missing --allow-releaseinfo-change && \
+        apt-get install -y --no-install-recommends \
+            ca-certificates \
+            curl \
+            wget \
+            gnupg \
+            lsb-release \
+        && break || { echo "Intento $i falló, reintentando en 10 segundos..."; sleep 10; } \
+    done && \
     apt-get install -y --no-install-recommends \
-    curl \
-    git \
-    unzip \
-    zip \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
-    mariadb-client \
-    ca-certificates \
+        git \
+        unzip \
+        zip \
+        libpng-dev \
+        libjpeg-dev \
+        libfreetype6-dev \
+        libonig-dev \
+        libxml2-dev \
+        libzip-dev \
+        mariadb-client \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
 # Configurar extensiones de GD
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 
-# Instalar Node.js y npm desde NodeSource
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs
+# Instalar Node.js y npm con manejo robusto de errores
+RUN for i in 1 2 3; do \
+        echo "Intento $i de instalación de Node.js..." && \
+        curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+        apt-get update && \
+        apt-get install -y --no-install-recommends nodejs && \
+        break || { echo "Intento $i de Node.js falló, reintentando..."; sleep 5; } \
+    done && \
+    node --version && npm --version
 
 # Instalar extensiones PHP
 RUN docker-php-ext-install \
