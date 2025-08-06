@@ -60,9 +60,9 @@ Route::get('/changepass', function() {
     return redirect('/');
 })->name('changepass');
 
-Route::get('/logout', function() {
+Route::get('/logout-redirect', function() {
     return redirect('/');
-})->name('logout');
+})->name('logout.redirect');
 
 
 Route::get('/demo-filtro', function() {
