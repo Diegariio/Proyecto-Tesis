@@ -407,7 +407,6 @@
                         <th>Paciente</th>
                         <th>N° Archivo</th>
                         <th>Sexo</th>
-                        <th>Tratamientos</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -416,7 +415,7 @@
                     <tr>
                         <td>
                                     <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTratamientosOncologicos" 
-                                            title="Ver Tratamientos" onclick="window.rutPacienteSeleccionado = '{{ $paciente['rut'] }}';">
+                                            title="Registrar Indicación" onclick="window.rutPacienteSeleccionado = '{{ $paciente['rut'] }}';">
                                         <i class="fas fa-address-book"></i>
                             </button>
                         </td>
@@ -424,22 +423,17 @@
                                 <td>{{ $paciente['paciente'] }}</td>
                                 <td>{{ $paciente['n_archivo'] }}</td>
                                 <td>{{ $paciente['sexo'] }}</td>
-                                <td>
-                                    <span class="badge bg-secondary" data-bs-toggle="tooltip" data-bs-placement="left" 
-                                          title="Funcionalidad pendiente" style="cursor: not-allowed;">
-                                        <small>VER</small>
-                                    </span>
-                                </td>
+
                     </tr>
                         @endforeach
                     @else
                         @if(request()->hasAny(['fecha_ingreso_inicio', 'fecha_ingreso_fin', 'rut_paciente', 'nombres', 'primer_apellido', 'segundo_apellido', 'numero_archivo']))
                             <tr>
-                                <td colspan="6" class="text-center text-muted">No se encontraron resultados para los filtros aplicados</td>
+                                <td colspan="5" class="text-center text-muted">No se encontraron resultados para los filtros aplicados</td>
                     </tr>
                         @else
                             <tr>
-                                <td colspan="6" class="text-center text-muted">Utilice los filtros para buscar pacientes</td>
+                                <td colspan="5" class="text-center text-muted">Utilice los filtros para buscar pacientes</td>
                     </tr>
                         @endif
                     @endif
@@ -451,86 +445,32 @@
 
 <!-- Collapse: Registrar tratamientos de hoy -->
 <div class="mt-4">
-    <button class="btn btn-outline-primary mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTratamientosHoy" aria-expanded="false" aria-controls="collapseTratamientosHoy">
+        <button class="btn btn-outline-primary mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTratamientosHoy" aria-expanded="false" aria-controls="collapseTratamientosHoy" onclick="cargarSesionesHoy()">
         Registrar Sesiones de hoy
     </button>
     <div class="collapse" id="collapseTratamientosHoy">
         <div class="card card-body">
             <h5 class="mb-4 text-primary"><i class="fas fa-calendar-day me-2"></i>Sesiones de hoy</h5>
-            <div class="row g-4">
-                <!-- Card 1 -->
-                <div class="col-md-6 col-lg-4">
-                    <div class="card shadow-sm border-info">
-                        <div class="card-body">
-                            <h6 class="card-title mb-2 text-info">Juan Pérez Soto</h6>
-                            <p class="mb-1"><strong>RUT:</strong> 12.345.678-9</p>
-                            <p class="mb-1"><strong>Diagnóstico CIE10:</strong> C50 - Mama</p>
-                            <p class="mb-1"><strong>Zona a Irradiar:</strong> Tórax</p>
-                            <p class="mb-1"><strong>Quimioterapia:</strong> Sí</p>
-                            <p class="mb-1"><strong>N° Sesión Actual:</strong> 5</p>
-                            <p class="mb-1"><strong>N° Sesiones totales:</strong> 10</p>
-                            <p class="mb-1"><strong>Horario:</strong> Diurno</p>
-                            <p class="mb-1"><strong>Radioterapeuta:</strong> Dr. Juan Pérez</p>
-                            <p class="mb-2"><strong>Observaciones Indicación:</strong> Sin novedades</p>
-                            <p class="mb-2"><strong>Observaciones Utlima sesion:</strong> Sin novedades</p>
-
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-success btn-sm" title="Marcar como realizado"><i class="fas fa-check"></i></button>
-                                <button class="btn btn-danger btn-sm" title="Marcar como no realizado"><i class="fas fa-times"></i></button>
-                                <button class="btn btn-secondary btn-sm" title="Agregar observación"><i class="fas fa-comment"></i></button>
+            
+            <!-- Loading indicator -->
+            <div id="loading-sesiones" class="text-center d-none">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
                             </div>
+                <p class="mt-2 text-muted">Cargando sesiones de hoy...</p>
                         </div>
-                    </div>
-                </div>
-                <!-- Card 2 -->
-                <div class="col-md-6 col-lg-4">
-                    <div class="card shadow-sm border-info">
-                        <div class="card-body">
-                            <h6 class="card-title mb-2 text-info">María López Díaz</h6>
-                            <p class="mb-1"><strong>RUT:</strong> 21.987.654-3</p>
-                            <p class="mb-1"><strong>Diagnóstico CIE10:</strong> C61 - Próstata</p>
-                            <p class="mb-1"><strong>Zona a Irradiar:</strong> Pelvis</p>
-                            <p class="mb-1"><strong>Quimioterapia:</strong> No</p>
-                            <p class="mb-1"><strong>N° Sesión Actual:</strong> 10</p>
-                            <p class="mb-1"><strong>N° Sesiones totales:</strong> 10</p>
-                            <p class="mb-1"><strong>Horario:</strong> Vespertino</p>
-                            <p class="mb-1"><strong>Radioterapeuta:</strong> Dra. Ana López</p>
-                                <p class="mb-2"><strong>Observaciones:</strong> Paciente con leve dolor</p>
-                                <p class="mb-2"><strong>Observaciones Utlima sesion:</strong> Sin novedades</p>
-
-                                <div class="d-flex gap-2">
-                                <button class="btn btn-success btn-sm" title="Marcar como realizado"><i class="fas fa-check"></i></button>
-                                <button class="btn btn-danger btn-sm" title="Marcar como no realizado"><i class="fas fa-times"></i></button>
-                                <button class="btn btn-secondary btn-sm" title="Agregar observación"><i class="fas fa-comment"></i></button>
+            
+            <!-- Contenedor para las cards dinámicas -->
+            <div id="contenedor-sesiones" class="row g-4">
+                <!-- Las cards se cargarán dinámicamente aquí -->
                             </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Card 3 -->
-                <div class="col-md-6 col-lg-4">
-                    <div class="card shadow-sm border-info">
-                        <div class="card-body">
-                            <h6 class="card-title mb-2 text-info">Carlos Ruiz Mena</h6>
-                            <p class="mb-1"><strong>RUT:</strong> 15.123.456-7</p>
-                            <p class="mb-1"><strong>Diagnóstico CIE10:</strong> C34 - Pulmón</p>
-                            <p class="mb-1"><strong>Zona a Irradiar:</strong> Abdomen</p>
-                            <p class="mb-1"><strong>Quimioterapia:</strong> Capecitabina</p>
-                            <p class="mb-1"><strong>N° Sesión Actual:</strong> 3</p>
-                            <p class="mb-1"><strong>N° Sesiones totales:</strong> 10</p>
-                            <p class="mb-1"><strong>Horario:</strong> Vespertino</p>
-                            <p class="mb-1"><strong>Radioterapeuta:</strong> Dr. Carlos Ruiz</p>
-                            <p class="mb-2"><strong>Observaciones Indicación:</strong> Presenta náuseas leves</p>
-                            <p class="mb-2"><strong>Observaciones Utlima sesion:</strong> Sin novedades</p>
-
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-success btn-sm" title="Marcar como realizado"><i class="fas fa-check"></i></button>
-                                <button class="btn btn-danger btn-sm" title="Marcar como no realizado"><i class="fas fa-times"></i></button>
-                                <button class="btn btn-secondary btn-sm" title="Agregar observación"><i class="fas fa-comment"></i></button>
+            
+            <!-- Mensaje cuando no hay sesiones -->
+            <div id="sin-sesiones" class="text-center d-none">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No hay sesiones programadas para hoy.
                             </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Puedes agregar más cards de ejemplo aquí -->
             </div>
         </div>
     </div>
@@ -691,10 +631,10 @@ function abrirModalRadioterapia() {
                 
                     // Llenar información del paciente en el modal
                     document.getElementById('modal-indicacion-rut').textContent = rut;
-                    document.getElementById('modal-indicacion-nombre').textContent = paciente.nombre + ' ' + paciente.primer_apellido + ' ' + paciente.segundo_apellido;
-                    document.getElementById('modal-indicacion-sexo').textContent = paciente.sexo ? paciente.sexo.sexo : 'N/A';
-                    document.getElementById('modal-indicacion-comuna').textContent = paciente.comuna ? paciente.comuna.nombre : 'N/A';
-                    document.getElementById('modal-indicacion-servicio').textContent = paciente.servicio_salud ? paciente.servicio_salud.nombre : 'N/A';
+                    document.getElementById('modal-indicacion-nombre').textContent = paciente.nombre;
+                    document.getElementById('modal-indicacion-sexo').textContent = paciente.sexo;
+                    document.getElementById('modal-indicacion-comuna').textContent = paciente.comuna;
+                    document.getElementById('modal-indicacion-servicio').textContent = paciente.servicio_salud;
                     
                     // Establecer el RUT en el campo oculto
                     document.getElementById('rut_paciente_modal').value = rut;
@@ -1025,7 +965,301 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     @endif
+    
+    // ===== EVENT LISTENERS PARA CÁLCULO DE FECHA TÉRMINO =====
+    const nSesionesSelect = document.getElementById('n_sesiones');
+    const fechaInicioInput = document.getElementById('fecha_inicio');
+    
+    if (nSesionesSelect && fechaInicioInput) {
+        // Calcular cuando cambie el número de sesiones
+        nSesionesSelect.addEventListener('change', function() {
+            console.log('Cambió número de sesiones:', this.value);
+            calcularFechaTermino();
+        });
+        
+        // Calcular cuando cambie la fecha de inicio
+        fechaInicioInput.addEventListener('change', function() {
+            console.log('Cambió fecha de inicio:', this.value);
+            calcularFechaTermino();
+        });
+        
+        console.log('✅ Event listeners para cálculo de fecha término agregados');
+    } else {
+        console.error('❌ No se encontraron los campos para el cálculo de fecha término');
+    }
+    
+    // ===== INICIALIZAR VARIABLE GLOBAL PARA CONTROL DE CARGA =====
+    window.sesionesYaCargadas = false;
+
+// ===== FUNCIÓN PARA CALCULAR FECHA DE TÉRMINO =====
+function calcularFechaTermino() {
+    const nSesiones = document.getElementById('n_sesiones').value;
+    const fechaInicio = document.getElementById('fecha_inicio').value;
+    const fechaTerminoInput = document.getElementById('fecha_termino');
+    
+    console.log('Calculando fecha término:', { nSesiones, fechaInicio });
+    
+    // Solo calcular si ambos campos tienen valores
+    if (nSesiones && fechaInicio) {
+        const sesiones = parseInt(nSesiones);
+        const inicio = new Date(fechaInicio);
+        
+        // Verificar que la fecha de inicio sea válida
+        if (isNaN(inicio.getTime())) {
+            fechaTerminoInput.value = '';
+            return;
+        }
+        
+        let diasAgregados = 0;
+        let fechaActual = new Date(inicio);
+        
+        // Necesitamos sesiones-1 días adicionales (la primera sesión es el día de inicio)
+        const diasAdicionales = sesiones - 1;
+        
+        while (diasAgregados < diasAdicionales) {
+            fechaActual.setDate(fechaActual.getDate() + 1);
+            
+            // Solo contar días laborables (lunes=1 a viernes=5)
+            const diaSemana = fechaActual.getDay();
+            if (diaSemana >= 1 && diaSemana <= 5) {
+                diasAgregados++;
+            }
+        }
+        
+        // Formatear la fecha para el input (YYYY-MM-DD)
+        const fechaTermino = fechaActual.toISOString().split('T')[0];
+        fechaTerminoInput.value = fechaTermino;
+        
+        console.log(`✅ Calculado: ${sesiones} sesiones desde ${fechaInicio} = ${fechaTermino}`);
+    } else {
+        // Limpiar fecha de término si faltan datos
+        fechaTerminoInput.value = '';
+        console.log('❌ Faltan datos para calcular fecha término');
+    }
+}
+
 });
+</script>
+
+<script>
+// ===== FUNCIONES GLOBALES PARA SESIONES DE HOY =====
+
+// ===== FUNCIÓN PARA CARGAR SESIONES DE HOY =====
+function cargarSesionesHoy() {
+    // Solo cargar si no se han cargado ya
+    if (window.sesionesYaCargadas) {
+        console.log('Las sesiones ya fueron cargadas previamente');
+        return;
+    }
+    
+    console.log('Cargando sesiones de hoy...');
+    
+    // Mostrar loading
+    document.getElementById('loading-sesiones').classList.remove('d-none');
+    document.getElementById('contenedor-sesiones').classList.add('d-none');
+    document.getElementById('sin-sesiones').classList.add('d-none');
+    
+    fetch('/sesiones-hoy')
+        .then(response => {
+            console.log('Status de respuesta:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('🔍 Respuesta completa del servidor:', data);
+            
+            // Ocultar loading
+            document.getElementById('loading-sesiones').classList.add('d-none');
+            
+            if (data.success) {
+                console.log(`📊 Total de sesiones encontradas: ${data.total || 0}`);
+                console.log(`📅 Fecha consultada: ${data.fecha_hoy}`);
+                
+                if (data.data && data.data.length > 0) {
+                    console.log('✅ Mostrando cards de sesiones:', data.data);
+                    // Mostrar las cards con las sesiones
+                    mostrarCardsSesiones(data.data);
+                    document.getElementById('contenedor-sesiones').classList.remove('d-none');
+                } else {
+                    console.log('ℹ️ No hay sesiones programadas para hoy');
+                    // No hay sesiones para hoy
+                    document.getElementById('sin-sesiones').classList.remove('d-none');
+                }
+                
+                // Marcar como cargadas
+                window.sesionesYaCargadas = true;
+                
+                // Mostrar estadísticas en consola
+                console.log(`✅ Proceso completado: ${data.total || 0} sesiones para ${data.fecha_hoy}`);
+            } else {
+                console.error('❌ Error del servidor:', data.message);
+                mostrarErrorCargaSesiones();
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar sesiones:', error);
+            document.getElementById('loading-sesiones').classList.add('d-none');
+            mostrarErrorCargaSesiones();
+        });
+}
+
+// ===== FUNCIÓN PARA MOSTRAR LAS CARDS DE SESIONES =====
+function mostrarCardsSesiones(sesiones) {
+    const contenedor = document.getElementById('contenedor-sesiones');
+    contenedor.innerHTML = ''; // Limpiar contenido anterior
+    
+    sesiones.forEach(sesion => {
+        const cardCol = document.createElement('div');
+        cardCol.className = 'col-md-6 col-lg-4';
+        
+        // Determinar el color del borde según el estado
+        const borderClass = sesion.sesion_realizada ? 'border-success' : 'border-info';
+        
+        cardCol.innerHTML = `
+            <div class="card shadow-sm ${borderClass}">
+                <div class="card-body">
+                    <h6 class="card-title mb-2 text-info">${sesion.paciente_nombre}</h6>
+                    <p class="mb-1"><strong>RUT:</strong> ${sesion.paciente_rut}</p>
+                    <p class="mb-1"><strong>Diagnóstico CIE10:</strong> ${sesion.diagnostico_cie10}</p>
+                    <p class="mb-1"><strong>Zona a Irradiar:</strong> ${sesion.zona_irradiar}</p>
+                    <p class="mb-1"><strong>Quimioterapia:</strong> ${sesion.quimioterapia}</p>
+                    <p class="mb-1"><strong>N° Sesión Actual:</strong> ${sesion.sesion_actual}</p>
+                    <p class="mb-1"><strong>N° Sesiones totales:</strong> ${sesion.sesiones_totales}</p>
+                    <p class="mb-1"><strong>Horario:</strong> ${sesion.horario}</p>
+                    <p class="mb-1"><strong>Radioterapeuta:</strong> ${sesion.radioterapeuta}</p>
+                    <p class="mb-2"><strong>Observaciones Indicación:</strong> ${sesion.observaciones_indicacion}</p>
+                    <p class="mb-2"><strong>Observaciones Última sesión:</strong> ${sesion.observaciones_ultima_sesion}</p>
+                    
+                    <div class="d-flex gap-2">
+                        ${sesion.sesion_realizada === null ? 
+                            // No registrada aún - mostrar ambos botones
+                            '<button class="btn btn-success btn-sm" title="Marcar como realizada" onclick="marcarSesion(' + sesion.id_registro_tratamiento + ', true)"><i class="fas fa-check me-1"></i>Sí</button>' +
+                            '<button class="btn btn-danger btn-sm" title="Marcar como no realizada" onclick="marcarSesion(' + sesion.id_registro_tratamiento + ', false)"><i class="fas fa-times me-1"></i>No</button>' :
+                            sesion.sesion_realizada === true ?
+                            // Ya registrada como realizada
+                            '<span class="badge bg-success"><i class="fas fa-check me-1"></i>Realizada</span>' +
+                            '<button class="btn btn-outline-danger btn-sm" title="Cambiar a no realizada" onclick="marcarSesion(' + sesion.id_registro_tratamiento + ', false)"><i class="fas fa-times me-1"></i>Cambiar a No</button>' :
+                            // Ya registrada como no realizada
+                            '<button class="btn btn-outline-success btn-sm" title="Cambiar a realizada" onclick="marcarSesion(' + sesion.id_registro_tratamiento + ', true)"><i class="fas fa-check me-1"></i>Cambiar a Sí</button>' +
+                            '<span class="badge bg-danger"><i class="fas fa-times me-1"></i>No realizada</span>'
+                        }
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        contenedor.appendChild(cardCol);
+    });
+}
+
+// ===== FUNCIÓN PARA MOSTRAR ERROR EN CARGA =====
+function mostrarErrorCargaSesiones() {
+    const contenedor = document.getElementById('contenedor-sesiones');
+    contenedor.innerHTML = `
+        <div class="col-12">
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Error al cargar las sesiones de hoy. Por favor, intente nuevamente.
+                <button class="btn btn-sm btn-outline-danger ms-2" onclick="recargarSesiones()">
+                    <i class="fas fa-refresh me-1"></i>Reintentar
+                </button>
+            </div>
+        </div>
+    `;
+    document.getElementById('contenedor-sesiones').classList.remove('d-none');
+}
+
+// ===== FUNCIÓN PARA RECARGAR SESIONES =====
+function recargarSesiones() {
+    window.sesionesYaCargadas = false;
+    cargarSesionesHoy();
+}
+
+// ===== FUNCIÓN PARA MARCAR SESIÓN (SÍ O NO) =====
+function marcarSesion(idTratamiento, seRealizo) {
+    const textoAccion = seRealizo ? 'realizado' : 'no realizado';
+    const iconoAccion = seRealizo ? 'success' : 'warning';
+    
+    console.log(`Marcando sesión como ${textoAccion} para tratamiento:`, idTratamiento);
+    
+    Swal.fire({
+        title: '¿Confirmar registro?',
+        text: `¿Quieres confirmar que este paciente ${seRealizo ? 'SÍ se ha realizado' : 'NO se ha realizado'} su sesión?`,
+        icon: iconoAccion,
+        showCancelButton: true,
+        confirmButtonText: 'Sí, confirmar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: seRealizo ? '#28a745' : '#dc3545',
+        cancelButtonColor: '#6c757d'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Enviar al servidor
+            registrarSesion(idTratamiento, seRealizo);
+        }
+    });
+}
+
+// ===== FUNCIÓN PARA REGISTRAR EN EL SERVIDOR =====
+function registrarSesion(idTratamiento, seRealizo) {
+    const formData = new FormData();
+    formData.append('id_registro_tratamiento', idTratamiento);
+    formData.append('se_realizo', seRealizo ? '1' : '0');
+    formData.append('fecha_registro', new Date().toISOString().split('T')[0]); // Fecha actual
+    
+    fetch('/registrar-sesion', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('✅ Respuesta del servidor:', data);
+        
+        if (data.success) {
+            Swal.fire({
+                title: '¡Guardado correctamente!',
+                text: data.message || 'La sesión ha sido registrada exitosamente',
+                icon: 'success',
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#28a745'
+            }).then(() => {
+                // Recargar las sesiones para mostrar el estado actualizado
+                window.sesionesYaCargadas = false;
+                cargarSesionesHoy();
+            });
+        } else {
+            Swal.fire({
+                title: 'Error al guardar',
+                text: data.message || 'Hubo un problema al registrar la sesión',
+                icon: 'error',
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#dc3545'
+            });
+        }
+    })
+    .catch(error => {
+        console.error('❌ Error al registrar sesión:', error);
+        Swal.fire({
+            title: 'Error de conexión',
+            text: 'No se pudo conectar con el servidor',
+            icon: 'error',
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#dc3545'
+        });
+    });
+}
+
+
+
 </script>
 
 

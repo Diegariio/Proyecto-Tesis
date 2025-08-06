@@ -278,4 +278,180 @@ class RegistroTratamientoRadioterapiaController extends Controller
             ], 500);
         }
     }
+
+    public function obtenerSesionesHoy(Request $request)
+    {
+        try {
+            // Permitir fecha de prueba vía parámetro para debugging
+            $fechaHoy = $request->get('fecha_prueba', now()->format('Y-m-d'));
+            \Log::info('=== INICIANDO BUSQUEDA DE SESIONES DE HOY ===');
+            \Log::info('Fecha actual del servidor: ' . $fechaHoy);
+            \Log::info('Timezone del servidor: ' . now()->timezone);
+            \Log::info('Timestamp completo: ' . now()->toDateTimeString());
+            
+            // Primero, verificar cuántos registros hay en total
+            $totalRegistros = RegistroTratamientoRadioterapia::count();
+            \Log::info('Total de registros en la tabla: ' . $totalRegistros);
+            
+            // Verificar registros con fechas
+            $registrosConFechas = RegistroTratamientoRadioterapia::select('id_registro_tratamiento', 'fecha_inicio', 'fecha_termino')
+                ->get();
+            \Log::info('Registros con fechas:', $registrosConFechas->toArray());
+            
+            // Consulta con relación a días realizados para verificar estado
+            $sesionesHoy = RegistroTratamientoRadioterapia::with([
+                'diasRealizados' => function ($query) use ($fechaHoy) {
+                    $query->where('fecha_registro', $fechaHoy);
+                }
+            ])
+            ->whereDate('fecha_inicio', '<=', $fechaHoy)
+            ->whereDate('fecha_termino', '>=', $fechaHoy)
+            ->get();
+            
+            \Log::info('Consulta SQL ejecutada con condiciones:');
+            \Log::info('fecha_inicio <= ' . $fechaHoy);
+            \Log::info('fecha_termino >= ' . $fechaHoy);
+            \Log::info('Resultados encontrados: ' . $sesionesHoy->count());
+            
+            $sesionesHoy = $sesionesHoy->map(function ($registro) use ($fechaHoy) {
+                try {
+                    \Log::info('Procesando registro ID: ' . $registro->id_registro_tratamiento);
+                    
+                    // Calcular número de sesión actual basado en días laborables transcurridos
+                    $fechaInicio = \Carbon\Carbon::parse($registro->fecha_inicio);
+                    $hoy = \Carbon\Carbon::parse($fechaHoy);
+                    
+                    $sesionActual = 1; // Empezar en 1 (la primera sesión)
+                    $fechaTemporal = $fechaInicio->copy();
+                    
+                    while ($fechaTemporal->lt($hoy)) {
+                        $fechaTemporal->addDay();
+                        // Solo contar días laborables (lunes a viernes)
+                        if ($fechaTemporal->isWeekday()) {
+                            $sesionActual++;
+                        }
+                    }
+                    
+                    // Verificar si la sesión de hoy ya fue registrada
+                    $sesionHoy = $registro->diasRealizados->first();
+                    $sesionRealizada = $sesionHoy ? $sesionHoy->se_realizo : null;
+                    
+                    \Log::info('Sesión de hoy para registro ' . $registro->id_registro_tratamiento . ':', [
+                        'sesion_registrada' => $sesionHoy ? 'Sí' : 'No',
+                        'se_realizo' => $sesionRealizada
+                    ]);
+                    
+                    return [
+                        'id_registro_tratamiento' => $registro->id_registro_tratamiento,
+                        'paciente_nombre' => 'Paciente Test (RUT: ' . $registro->rut . ')',
+                        'paciente_rut' => $registro->rut,
+                        'diagnostico_cie10' => 'Diagnóstico Test',
+                        'zona_irradiar' => 'Zona Test',
+                        'quimioterapia' => 'No',
+                        'sesion_actual' => $sesionActual,
+                        'sesiones_totales' => $registro->n_sesiones_programadas,
+                        'horario' => $registro->horario_tratamiento ?? 'Diurno',
+                        'radioterapeuta' => 'Dr. Test',
+                        'observaciones_indicacion' => $registro->observaciones ?: 'Sin observaciones',
+                        'observaciones_ultima_sesion' => 'Sin observaciones previas',
+                        'sesion_realizada' => $sesionRealizada, // null = no registrada, true = realizada, false = no realizada
+                        'fecha_inicio' => $registro->fecha_inicio,
+                        'fecha_termino' => $registro->fecha_termino
+                    ];
+                } catch (\Exception $e) {
+                    \Log::error('Error procesando registro ' . $registro->id_registro_tratamiento . ': ' . $e->getMessage());
+                    return null;
+                }
+            })->filter(); // Remover nulls
+
+            \Log::info('=== RESULTADO FINAL ===');
+            \Log::info('Total de sesiones procesadas: ' . $sesionesHoy->count());
+            \Log::info('Datos a retornar:', $sesionesHoy->toArray());
+
+            return response()->json([
+                'success' => true,
+                'data' => $sesionesHoy,
+                'fecha_hoy' => $fechaHoy,
+                'total' => $sesionesHoy->count()
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error al obtener sesiones de hoy: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener las sesiones de hoy'
+            ], 500);
+        }
+    }
+
+    public function registrarSesion(Request $request)
+    {
+        try {
+            \Log::info('=== REGISTRANDO SESIÓN ===');
+            \Log::info('Datos recibidos:', $request->all());
+
+            // Validar datos recibidos
+            $validated = $request->validate([
+                'id_registro_tratamiento' => 'required|integer|exists:tron_registro_tratamiento,id_registro_tratamiento',
+                'se_realizo' => 'required|boolean',
+                'fecha_registro' => 'required|date'
+            ]);
+
+            \Log::info('Datos validados:', $validated);
+
+            // Verificar si ya existe un registro para esta fecha y tratamiento
+            $registroExistente = \App\Models\DiaRealizado::where('id_registro_tratamiento', $validated['id_registro_tratamiento'])
+                ->where('fecha_registro', $validated['fecha_registro'])
+                ->first();
+
+            if ($registroExistente) {
+                // Actualizar registro existente
+                $registroExistente->update([
+                    'se_realizo' => $validated['se_realizo']
+                ]);
+                
+                \Log::info('Registro actualizado:', $registroExistente->toArray());
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Sesión actualizada correctamente',
+                    'data' => $registroExistente
+                ]);
+            } else {
+                // Crear nuevo registro
+                $nuevoRegistro = \App\Models\DiaRealizado::create([
+                    'id_registro_tratamiento' => $validated['id_registro_tratamiento'],
+                    'se_realizo' => $validated['se_realizo'],
+                    'fecha_registro' => $validated['fecha_registro']
+                ]);
+                
+                \Log::info('Nuevo registro creado:', $nuevoRegistro->toArray());
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Sesión registrada correctamente',
+                    'data' => $nuevoRegistro
+                ]);
+            }
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Error de validación:', $e->errors());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
+
+        } catch (\Exception $e) {
+            \Log::error('Error al registrar sesión: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno del servidor'
+            ], 500);
+        }
+    }
 }

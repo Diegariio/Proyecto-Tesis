@@ -31,6 +31,8 @@ Route::get('/registroTratamientoRadioterapia', [RegistroTratamientoRadioterapiaC
 Route::post('/registroTratamientoRadioterapia', [RegistroTratamientoRadioterapiaController::class, 'store'])->name('registro-tratamiento.store');
 Route::post('/validar-rut', [RegistroTratamientoRadioterapiaController::class, 'validarRut'])->name('validar-rut');
 Route::post('/obtener-datos-paciente', [RegistroTratamientoRadioterapiaController::class, 'obtenerDatosPaciente'])->name('obtener-datos-paciente');
+Route::get('/sesiones-hoy', [RegistroTratamientoRadioterapiaController::class, 'obtenerSesionesHoy'])->name('sesiones-hoy');
+Route::post('/registrar-sesion', [RegistroTratamientoRadioterapiaController::class, 'registrarSesion'])->name('registrar-sesion');
 
 // Rutas para búsqueda de pacientes
 Route::get('/busqueda-pacientes', [BusquedaPacientesRadioterapiaController::class, 'index'])->name('busqueda-pacientes.index');
