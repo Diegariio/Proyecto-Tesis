@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\RegistroTratamientoRadioterapia;
+// use App\Models\RegistroTratamientoRadioterapia; // Eliminado para reestructuración
 
 class CodigoTratamiento extends Model
 {
@@ -12,8 +12,5 @@ class CodigoTratamiento extends Model
     public $incrementing = true;
     protected $fillable = ['codigo'];
 
-    public function registrosTratamiento()
-    {
-        return $this->hasMany(RegistroTratamientoRadioterapia::class, 'id_codigo_tratamiento');
-    }
+
 }

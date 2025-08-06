@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\RegistroTratamientoRadioterapia;
+// use App\Models\RegistroTratamientoRadioterapia; // Eliminado para reestructuración
 
 class CodigoGES extends Model
 {
@@ -14,6 +14,6 @@ class CodigoGES extends Model
 
     public function registrosTratamiento()
     {
-        return $this->hasMany(RegistroTratamientoRadioterapia::class, 'id_codigo_ges');
+        // return $this->hasMany(RegistroTratamientoRadioterapia::class, 'id_codigo_ges'); // Eliminado para reestructuración
     }
 }

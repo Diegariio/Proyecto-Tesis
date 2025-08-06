@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\RegistroTratamientoRadioterapia;
 
 class Paciente extends Model
 {
@@ -26,6 +27,12 @@ class Paciente extends Model
     public function servicio()
     {
         return $this->belongsTo(ServicioDeSalud::class, 'id_servicio');
+    }
+
+    // Relación: Un paciente tiene muchos registros de tratamiento
+    public function registrosTratamiento()
+    {
+        return $this->hasMany(RegistroTratamientoRadioterapia::class, 'rut', 'rut');
     }
 }
 

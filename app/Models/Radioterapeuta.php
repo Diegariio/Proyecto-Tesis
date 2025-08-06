@@ -12,6 +12,7 @@ class Radioterapeuta extends Model
     public $incrementing = true;
     protected $fillable = ['nombre'];
 
+    // Relación: Un radioterapeuta tiene muchos registros de tratamiento
     public function registrosTratamiento()
     {
         return $this->hasMany(RegistroTratamientoRadioterapia::class, 'id_radioterapeuta');

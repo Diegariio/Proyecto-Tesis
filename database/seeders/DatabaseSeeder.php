@@ -10,7 +10,6 @@ use Database\Seeders\CodigoTratamientoSeeder;
 use Database\Seeders\EquipoTratamientoSeeder;
 use Database\Seeders\RadioterapeutaSeeder;
 use Database\Seeders\CodigoGESSeeder;
-use Database\Seeders\DiagnosticoSeeder;
 use Database\Seeders\QuimioterapiaConcominanteSeeder;
 use Database\Seeders\ComunaSeeder;
 use Database\Seeders\RespuestaSeeder;
@@ -38,7 +37,6 @@ class DatabaseSeeder extends Seeder
         EquipoTratamientoSeeder::class,
         RadioterapeutaSeeder::class,
         CodigoGESSeeder::class,
-        DiagnosticoSeeder::class,
         QuimioterapiaConcominanteSeeder::class,
         ComunaSeeder::class,
         SexoSeeder::class,

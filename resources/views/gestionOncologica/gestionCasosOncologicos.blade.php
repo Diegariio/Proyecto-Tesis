@@ -1821,8 +1821,8 @@ function mostrarErrorCampo(mensaje) {
                     estadoElement.innerHTML = '<span class="badge bg-success">EN GESTIÓN</span>';
                 }
                 
-                document.getElementById('info-requerimiento-detalles').style.display = 'block';
-                
+                    document.getElementById('info-requerimiento-detalles').style.display = 'block';
+                    
                 // Asignar el ID del registro a los botones
                 document.getElementById('btn-agregar-gestion').setAttribute('data-id', idRegistro);
                 document.getElementById('btn-cerrar-requerimiento').setAttribute('data-id', idRegistro);

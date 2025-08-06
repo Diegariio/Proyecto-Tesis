@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\RegistroTratamientoRadioterapia;
+use App\Models\DefinicionEquipo;
 
 class EquipoTratamiento extends Model
 {
@@ -12,8 +12,9 @@ class EquipoTratamiento extends Model
     public $incrementing = true;
     protected $fillable = ['nombre'];
 
-    public function registrosTratamiento()
+    // Relación: Un equipo puede estar en muchas definiciones
+    public function definicionesEquipo()
     {
-        return $this->hasMany(RegistroTratamientoRadioterapia::class, 'id_equipo');
+        return $this->hasMany(DefinicionEquipo::class, 'id_equipo');
     }
 }

@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\RegistroTratamientoRadioterapia;
 
 class QuimioterapiaConcominante extends Model
 {
@@ -14,6 +13,5 @@ class QuimioterapiaConcominante extends Model
 
     public function registrosTratamiento()
     {
-        return $this->hasMany(RegistroTratamientoRadioterapia::class, 'id_quimioterapia');
     }
 }
