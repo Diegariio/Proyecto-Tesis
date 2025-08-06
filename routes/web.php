@@ -10,6 +10,7 @@ use App\Models\CodigoGES;
 use App\Models\QuimioterapiaConcominante;
 use App\Http\Controllers\RegistroTratamientoRadioterapiaController;
 use App\Http\Controllers\BusquedaPacientesRadioterapiaController;
+use App\Http\Controllers\AuthController;
 
 use App\Models\EstadoProceso;
 use App\Models\Categoria;
@@ -21,9 +22,17 @@ use App\Models\Responsable;
 use App\Http\Controllers\GestionCasosOncologicosController;
 use App\Http\Controllers\RegistroRequerimientoController;
 
-Route::get('/', function () {
-    return view('home');
-});
+// ===== RUTAS DE AUTENTICACIÓN =====
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/create-test-user', [AuthController::class, 'createTestUser'])->name('create-test-user');
+
+// ===== RUTA PRINCIPAL (PROTEGIDA) =====
+Route::middleware('auth')->group(function () {
+    Route::get('/', function () {
+        return view('home');
+    })->name('home');
 
 
 // Rutas para registro de tratamiento
@@ -71,3 +80,5 @@ Route::get('/requerimiento/{id}/gestiones', [GestionCasosOncologicosController::
 Route::post('/gestion-requerimiento/actualizar-respuesta', [GestionCasosOncologicosController::class, 'actualizarRespuestaGestion']);
 Route::get('/cierres/opciones', [GestionCasosOncologicosController::class, 'opcionesCierre']);
 Route::post('/requerimiento/cerrar', [GestionCasosOncologicosController::class, 'cerrarRequerimiento']);
+
+}); // Fin del grupo middleware auth

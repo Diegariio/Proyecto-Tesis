@@ -29,6 +29,7 @@
                     <hr class="dropdown-divider" />
                 </li>
                 <form method="POST" action="{{ route('logout') }}">
+                    @csrf
                     <li>
                         <button class="dropdown-item" onclick="event.preventDefault(); this.closest('form').submit();">
                             <i class="fas fa-power-off"></i> Salir
