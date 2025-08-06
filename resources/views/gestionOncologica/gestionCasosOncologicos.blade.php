@@ -4,7 +4,10 @@
 
 
 @section('content')
-<h1 class="h4">Gestión de Casos Oncológicos</h1>
+<h1 class="h4">
+    <i class="fas fa-notes-medical me-2"></i>
+    Gestión de Casos Oncológicos
+</h1>
 @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
@@ -12,6 +15,11 @@
         </div>
     @endif
     <div class="card mt-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0 text-primary">
+            <i class="fas fa-search me-2"></i>Filtro de búsqueda
+        </h5>
+    </div>
         <div class="card-body">
             <form method="GET" action="{{ route('gestionCasosOncologicos') }}">
                 <div class="row g-2">
@@ -110,17 +118,21 @@
                         </select>
                     </div>
                 </div>
-                <div class="d-flex justify-content-between mt-4">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-search"></i> Buscar
-                    </button>
-                    <a href="{{ route('gestionCasosOncologicos') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-rotate-left"></i> Limpiar
-                    </a>
-                    <button type="button" class="btn btn-success" id="btn-agregar-requerimiento" disabled style="opacity: 0.5; pointer-events: none;">
+
+                            <!-- Botones de acción -->
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter"></i> Filtrar
+                </button>
+                
+                <button type="button" class="btn btn-secondary">
+                    <i class="fas fa-eraser"></i> Limpiar
+                </button>
+                
+                <button type="button" class="btn btn-success" id="btn-agregar-requerimiento" disabled style="opacity: 0.5; pointer-events: none;">
                         <i class="fas fa-plus-circle"></i> Agregar Nuevo Requerimiento
-                    </button>
-                </div>
+                </button>
+            </div>
             </form>
         </div>
     </div>
@@ -128,15 +140,15 @@
     @if($resultados->count() > 0)
     <!-- TÍTULO DE RESULTADOS -->
         <div class="card mt-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">
-                <i class="fas fa-search me-2"></i>
-                Resultados de la búsqueda ({{ $resultados->count() }} registros encontrados)
-            </h5>
-        </div>
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-search me-2"></i>
+                    Resultados de la búsqueda ({{ $resultados->count() }} registros encontrados)
+                </h5>
+            </div>
             <div class="card-body">
                 <div class="table-responsive">
-                <table class="table table-striped">
+                    <table class="table table-sm table-hover text-nowrap mb-0">
                         <thead>
                             <tr>
                                 <th>Acciones</th>
@@ -144,34 +156,27 @@
                                 <th>Nombre Paciente</th>
                                 <th>Diagnóstico</th>
                                 <th>Fecha Requerimiento</th>
-                            <th>Fecha Próxima Revisión</th>
+                                <th>Fecha Próxima Revisión</th>
                                 <th>Requerimiento</th>
                                 <th>Responsable</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($resultados as $registro)
+                            @foreach($resultados as $index => $registro)
                             <tr>
-                                <!-- Acciones -->
                                 <td>
-                                    <button class="btn btn-sm btn-info btn-ver-detalles" 
+                                    <button class="btn btn-secondary btn-sm btn-ver-detalles" 
                                             title="Ver detalles" 
                                             data-id="{{ $registro->id_registro_requerimiento }}">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </td>
-                                
-                                <!-- RUT Paciente -->
-                                        <td>{{ $registro->paciente->rut ?? 'N/A' }}</td>
-                                
-                                <!-- Nombre Paciente -->
+                                <td>{{ $registro->paciente->rut ?? 'N/A' }}</td>
                                 <td>
                                     {{ $registro->paciente->nombre ?? '' }} 
                                     {{ $registro->paciente->primer_apellido ?? '' }} 
                                     {{ $registro->paciente->segundo_apellido ?? '' }}
                                 </td>
-                                
-                                <!-- Diagnóstico -->
                                 <td>
                                     @if($registro->codigo)
                                         {{ $registro->codigo->codigo_cie10 ?? '' }} - 
@@ -180,11 +185,7 @@
                                         N/A
                                     @endif
                                 </td>
-                                
-                                <!-- Fecha Requerimiento -->
                                 <td>{{ $registro->created_at ? $registro->created_at->format('d/m/Y') : 'N/A' }}</td>
-                                
-                                <!-- Fecha Próxima Revisión con indicador de urgencia -->
                                 <td>
                                     @if($registro->fecha_proxima_revision)
                                         @php
@@ -192,7 +193,6 @@
                                             $hoy = \Carbon\Carbon::now();
                                             $diasRestantes = $hoy->diffInDays($fecha, false);
                                         @endphp
-                                        
                                         <span class="{{ $diasRestantes <= 7 ? 'text-danger fw-bold' : ($diasRestantes <= 14 ? 'text-warning' : 'text-success') }}">
                                             {{ $fecha->format('d/m/Y') }}
                                             @if($diasRestantes <= 7)
@@ -203,8 +203,6 @@
                                         N/A
                                     @endif
                                 </td>
-                                
-                                <!-- Requerimiento -->
                                 <td>
                                     @if($registro->requerimiento)
                                         {{ $registro->requerimiento->requerimiento ?? 'N/A' }}
@@ -212,8 +210,6 @@
                                         N/A (ID: {{ $registro->id_requerimiento }})
                                     @endif
                                 </td>
-                                
-                                <!-- Responsable -->
                                 <td>
                                     @if($registro->responsable)
                                         {{ $registro->responsable->responsable ?? 'N/A' }}
@@ -221,13 +217,13 @@
                                         N/A (ID: {{ $registro->id_responsable }})
                                     @endif
                                 </td>
-                                    </tr>
+                            </tr>
                             @endforeach
                         </tbody>
                     </table>
+                </div>
             </div>
         </div>
-    </div>
 @else
     <!-- MENSAJE CUANDO NO HAY RESULTADOS -->
     <div class="card mt-4">
@@ -526,67 +522,23 @@
     </div>
   </div>
 </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-    // Formateo de RUT (MANTIENE el original, solo permite K al final)
-            const rutInput = document.getElementById('rut-paciente');
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ===== VARIABLES GLOBALES =====
+    const rutInput = document.getElementById('rut-paciente');
     const grut = document.getElementById('grut');
     const iconrut = document.getElementById('iconrut');
+    const cie10Select = document.getElementById('cie10');
+    const btnAgregar = document.getElementById('btn-agregar-requerimiento');
     
     let timeoutId;
     let rutValidado = false;
-    
-            if (rutInput) {
-                rutInput.addEventListener('input', function (e) {
+
+    // ===== FORMATEO Y VALIDACIÓN DE RUT =====
+    if (rutInput) {
+        // Event listener para input
+        rutInput.addEventListener('input', function(e) {
             let value = e.target.value;
-            
-            // Función para formatear RUT que preserva la K
-            function formatearRUT(input) {
-                // Remover todo excepto números y K/k
-                let cleanValue = input.replace(/[^\dKk]/g, '');
-                
-                // Si hay una K o k, asegurar que esté solo al final
-                let hasK = /[Kk]/.test(cleanValue);
-                let dvChar = '';
-                
-                if (hasK) {
-                    // Extraer la K y ponerla al final
-                    cleanValue = cleanValue.replace(/[Kk]/g, '');
-                    dvChar = 'K';
-                }
-                
-                // Si no hay K pero hay números, el último número es el DV
-                if (!hasK && cleanValue.length > 1) {
-                    dvChar = cleanValue.slice(-1);
-                    cleanValue = cleanValue.slice(0, -1);
-                } else if (!hasK && cleanValue.length === 1) {
-                    return cleanValue;
-                }
-                
-                // Si solo tenemos números sin DV, no formatear aún
-                if (!dvChar && cleanValue.length <= 8) {
-                    return cleanValue;
-                }
-                
-                // Formatear el cuerpo del RUT con puntos
-                if (cleanValue.length > 0) {
-                    let formatted = '';
-                    let reversed = cleanValue.split('').reverse().join('');
-                    
-                    for (let i = 0; i < reversed.length; i++) {
-                        if (i !== 0 && i % 3 === 0) {
-                            formatted = '.' + formatted;
-                        }
-                        formatted = reversed[i] + formatted;
-                    }
-                    
-                    return formatted + (dvChar ? '-' + dvChar : '');
-                } else {
-                    return dvChar ? '-' + dvChar : '';
-                }
-            }
-            
-            // Aplicar el formateo
             let formattedValue = formatearRUT(value);
             
             // Solo actualizar si el valor cambió para evitar loops
@@ -607,11 +559,9 @@
             }, 1000);
         });
 
-        // Manejar el evento de pegado específicamente
+        // Event listener para paste
         rutInput.addEventListener('paste', function(e) {
-            // Permitir que el paste ocurra normalmente
             setTimeout(() => {
-                // Después del paste, formatear el contenido
                 let pastedValue = e.target.value;
                 let formattedValue = formatearRUT(pastedValue);
                 e.target.value = formattedValue;
@@ -629,55 +579,55 @@
                 }, 500);
             }, 0);
         });
+    }
 
-        // Función auxiliar para formatear RUT (reutilizable)
-        function formatearRUT(input) {
-            // Remover todo excepto números y K/k
-            let cleanValue = input.replace(/[^\dKk]/g, '');
+    // ===== FUNCIONES DE FORMATEO DE RUT =====
+    function formatearRUT(input) {
+        // Remover todo excepto números y K/k
+        let cleanValue = input.replace(/[^\dKk]/g, '');
+        
+        // Si hay una K o k, asegurar que esté solo al final
+        let hasK = /[Kk]/.test(cleanValue);
+        let dvChar = '';
+        
+        if (hasK) {
+            // Extraer la K y ponerla al final
+            cleanValue = cleanValue.replace(/[Kk]/g, '');
+            dvChar = 'K';
+        }
+        
+        // Si no hay K pero hay números, el último número es el DV
+        if (!hasK && cleanValue.length > 1) {
+            dvChar = cleanValue.slice(-1);
+            cleanValue = cleanValue.slice(0, -1);
+        } else if (!hasK && cleanValue.length === 1) {
+            return cleanValue;
+        }
+        
+        // Si solo tenemos números sin DV, no formatear aún
+        if (!dvChar && cleanValue.length <= 8) {
+            return cleanValue;
+        }
+        
+        // Formatear el cuerpo del RUT con puntos
+        if (cleanValue.length > 0) {
+            let formatted = '';
+            let reversed = cleanValue.split('').reverse().join('');
             
-            // Si hay una K o k, asegurar que esté solo al final
-            let hasK = /[Kk]/.test(cleanValue);
-            let dvChar = '';
-            
-            if (hasK) {
-                // Extraer la K y ponerla al final
-                cleanValue = cleanValue.replace(/[Kk]/g, '');
-                dvChar = 'K';
+            for (let i = 0; i < reversed.length; i++) {
+                if (i !== 0 && i % 3 === 0) {
+                    formatted = '.' + formatted;
+                }
+                formatted = reversed[i] + formatted;
             }
             
-            // Si no hay K pero hay números, el último número es el DV
-            if (!hasK && cleanValue.length > 1) {
-                dvChar = cleanValue.slice(-1);
-                cleanValue = cleanValue.slice(0, -1);
-            } else if (!hasK && cleanValue.length === 1) {
-                return cleanValue;
-            }
-            
-            // Si solo tenemos números sin DV, no formatear aún
-            if (!dvChar && cleanValue.length <= 8) {
-                return cleanValue;
-            }
-            
-            // Formatear el cuerpo del RUT con puntos
-            if (cleanValue.length > 0) {
-                        let formatted = '';
-                let reversed = cleanValue.split('').reverse().join('');
-                
-                        for (let i = 0; i < reversed.length; i++) {
-                            if (i !== 0 && i % 3 === 0) {
-                                formatted = '.' + formatted;
-                            }
-                            formatted = reversed[i] + formatted;
-                        }
-                
-                return formatted + (dvChar ? '-' + dvChar : '');
-            } else {
-                return dvChar ? '-' + dvChar : '';
-            }
+            return formatted + (dvChar ? '-' + dvChar : '');
+        } else {
+            return dvChar ? '-' + dvChar : '';
         }
     }
 
-    // Función de validación de RUT
+    // ===== FUNCIONES DE VALIDACIÓN DE RUT =====
     function validarRut(rut) {
         if (rut.length < 8) {
             resetearEstilo();
@@ -700,12 +650,10 @@
             if (data.valido) {
                 mostrarExito();
                 rutValidado = true;
-                // Obtener CIE10 específicos para este RUT
                 obtenerCie10PorRut(rut);
             } else {
                 mostrarError(data.mensaje);
                 rutValidado = false;
-                // Restaurar todos los CIE10
                 restaurarTodosLosCie10();
             }
             checkFields();
@@ -717,188 +665,128 @@
             checkFields();
         });
     }
-    
+
+    // ===== FUNCIONES DE ESTILO Y UI =====
     function mostrarExito() {
-    grut.className = 'form-group col-md-3';
-    const input = rutInput;
-    input.classList.add('is-valid');
-    iconrut.style.display = 'block';
-    iconrut.className = 'fas fa-check text-success';
-}
+        grut.className = 'form-group col-md-3';
+        const input = rutInput;
+        input.classList.add('is-valid');
+        iconrut.style.display = 'block';
+        iconrut.className = 'fas fa-check text-success';
+    }
 
-function mostrarError(mensaje) {
-    grut.className = 'form-group col-md-3';
-    const input = rutInput;
-    input.classList.add('is-invalid');
-    iconrut.style.display = 'block';
-    iconrut.className = 'fas fa-times text-danger';
-    
-    Swal.fire({
-        icon: 'error',
-        title: 'Error!',
-        text: mensaje,
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#3085d6',
-        customClass: {
-            popup: 'swal2-custom-popup',
-            title: 'swal2-custom-title',
-            content: 'swal2-custom-content',
-            confirmButton: 'swal2-custom-button'
-        }
-    });
-}
+    function mostrarError(mensaje) {
+        grut.className = 'form-group col-md-3';
+        const input = rutInput;
+        input.classList.add('is-invalid');
+        iconrut.style.display = 'block';
+        iconrut.className = 'fas fa-times text-danger';
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: mensaje,
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#3085d6',
+            customClass: {
+                popup: 'swal2-custom-popup',
+                title: 'swal2-custom-title',
+                content: 'swal2-custom-content',
+                confirmButton: 'swal2-custom-button'
+            }
+        });
+    }
 
-function resetearEstilo() {
-    grut.className = 'form-group col-md-3';
-    const input = rutInput;
-    input.classList.remove('is-valid', 'is-invalid');
-    iconrut.style.display = 'none';
-}
+    function resetearEstilo() {
+        grut.className = 'form-group col-md-3';
+        const input = rutInput;
+        input.classList.remove('is-valid', 'is-invalid');
+        iconrut.style.display = 'none';
+    }
 
-// Función para obtener CIE10 por RUT
-function obtenerCie10PorRut(rut) {
-    fetch('/obtener-cie10-por-rut', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({ rut: rut })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            filtrarSelectCie10(data.codigos);
-        } else {
-            console.error('Error al obtener códigos CIE10');
+    // ===== FUNCIONES DE CIE10 =====
+    function obtenerCie10PorRut(rut) {
+        fetch('/obtener-cie10-por-rut', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ rut: rut })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                filtrarSelectCie10(data.codigos);
+            } else {
+                console.error('Error al obtener códigos CIE10');
+                restaurarTodosLosCie10();
+            }
+        })
+        .catch(error => {
+            console.error('Error en la petición:', error);
             restaurarTodosLosCie10();
-        }
-    })
-    .catch(error => {
-        console.error('Error en la petición:', error);
-        restaurarTodosLosCie10();
-    });
-}
+        });
+    }
 
-// Función para filtrar el select de CIE10
-function filtrarSelectCie10(codigosEncontrados) {
-    const selectCie10 = document.getElementById('cie10');
-    const todasLasOpciones = selectCie10.querySelectorAll('option');
-    
-    // Obtener los IDs de los códigos encontrados
-    const codigosIds = codigosEncontrados.map(codigo => codigo.id_codigo);
-    
-    // Mostrar/ocultar opciones según si están en los resultados
-    todasLasOpciones.forEach(option => {
-        if (option.value === '') {
-            // Mantener la opción "Seleccionar CIE 10" siempre visible
+    function filtrarSelectCie10(codigosEncontrados) {
+        const selectCie10 = document.getElementById('cie10');
+        const todasLasOpciones = selectCie10.querySelectorAll('option');
+        
+        // Obtener los IDs de los códigos encontrados
+        const codigosIds = codigosEncontrados.map(codigo => codigo.id_codigo);
+        
+        // Mostrar/ocultar opciones según si están en los resultados
+        todasLasOpciones.forEach(option => {
+            if (option.value === '') {
+                // Mantener la opción "Seleccionar CIE 10" siempre visible
+                option.style.display = '';
+            } else {
+                // Mostrar solo si está en los códigos encontrados
+                option.style.display = codigosIds.includes(parseInt(option.value)) ? '' : 'none';
+            }
+        });
+        
+        // Limpiar la selección actual
+        selectCie10.value = '';
+    }
+
+    function restaurarTodosLosCie10() {
+        const selectCie10 = document.getElementById('cie10');
+        const todasLasOpciones = selectCie10.querySelectorAll('option');
+        
+        todasLasOpciones.forEach(option => {
             option.style.display = '';
-        } else {
-            // Mostrar solo si está en los códigos encontrados
-            option.style.display = codigosIds.includes(parseInt(option.value)) ? '' : 'none';
-        }
-    });
-    
-    // Limpiar la selección actual
-    selectCie10.value = '';
-}
+        });
+        
+        // Limpiar la selección actual
+        selectCie10.value = '';
+    }
 
-// Función para restaurar todas las opciones
-function restaurarTodosLosCie10() {
-    const selectCie10 = document.getElementById('cie10');
-    const todasLasOpciones = selectCie10.querySelectorAll('option');
-    
-    todasLasOpciones.forEach(option => {
-        option.style.display = '';
-    });
-    
-    // Limpiar la selección actual
-    selectCie10.value = '';
-}
-
-// Función para obtener CIE10 por RUT
-function obtenerCie10PorRut(rut) {
-    fetch('/obtener-cie10-por-rut', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({ rut: rut })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            filtrarSelectCie10(data.codigos);
-        } else {
-            console.error('Error al obtener códigos CIE10');
-            restaurarTodosLosCie10();
-        }
-    })
-    .catch(error => {
-        console.error('Error en la petición:', error);
-        restaurarTodosLosCie10();
-    });
-}
-
-// Función para filtrar el select de CIE10
-function filtrarSelectCie10(codigosEncontrados) {
-    const selectCie10 = document.getElementById('cie10');
-    const todasLasOpciones = selectCie10.querySelectorAll('option');
-    
-    // Obtener los IDs de los códigos encontrados
-    const codigosIds = codigosEncontrados.map(codigo => codigo.id_codigo);
-    
-    // Mostrar/ocultar opciones según si están en los resultados
-    todasLasOpciones.forEach(option => {
-        if (option.value === '') {
-            // Mantener la opción "Seleccionar CIE 10" siempre visible
-            option.style.display = '';
-        } else {
-            // Mostrar solo si está en los códigos encontrados
-            option.style.display = codigosIds.includes(parseInt(option.value)) ? '' : 'none';
-        }
-    });
-    
-    // Limpiar la selección actual
-    selectCie10.value = '';
-}
-
-// Función para restaurar todas las opciones
-function restaurarTodosLosCie10() {
-    const selectCie10 = document.getElementById('cie10');
-    const todasLasOpciones = selectCie10.querySelectorAll('option');
-    
-    todasLasOpciones.forEach(option => {
-        option.style.display = '';
-    });
-    
-    // Limpiar la selección actual
-    selectCie10.value = '';
-}
-
-    // Habilitar botón solo si RUT es válido Y CIE10 está completo
-    const cie10Select = document.getElementById('cie10');
-    const btnAgregar = document.getElementById('btn-agregar-requerimiento');
-
+    // ===== VALIDACIÓN DE CAMPOS =====
     function checkFields() {
-        if (rutValidado && cie10Select.value.trim() !== '') {
-            btnAgregar.disabled = false;
-            btnAgregar.style.opacity = 1;
-            btnAgregar.style.pointerEvents = 'auto';
+        if (rutValidado && cie10Select && cie10Select.value.trim() !== '') {
+            if (btnAgregar) {
+                btnAgregar.disabled = false;
+                btnAgregar.style.opacity = 1;
+                btnAgregar.style.pointerEvents = 'auto';
+            }
         } else {
-            btnAgregar.disabled = true;
-            btnAgregar.style.opacity = 0.5;
-            btnAgregar.style.pointerEvents = 'none';
+            if (btnAgregar) {
+                btnAgregar.disabled = true;
+                btnAgregar.style.opacity = 0.5;
+                btnAgregar.style.pointerEvents = 'none';
+            }
         }
     }
 
+    // Event listeners para validación de campos
     if (rutInput && cie10Select && btnAgregar) {
         rutInput.addEventListener('input', checkFields);
         cie10Select.addEventListener('change', checkFields);
     }
 
-    // Validación de fechas
+    // ===== VALIDACIÓN DE FECHAS =====
     const fechaDesde = document.getElementById('fecha-desde');
     const fechaHasta = document.getElementById('fecha-hasta');
 
@@ -920,7 +808,7 @@ function restaurarTodosLosCie10() {
         });
     }
 
-    // Mostrar el modal al hacer click
+    // ===== MODAL DE REQUERIMIENTO =====
     if (btnAgregar && rutInput) {
         btnAgregar.addEventListener('click', function() {
             const rut = rutInput.value.trim();
@@ -958,8 +846,129 @@ function restaurarTodosLosCie10() {
                 });
         });
     }
+
+    // ===== VALIDACIÓN DE CAMPOS DE TEXTO =====
+    validarCamposTexto();
+    
+    // ===== CONFIGURACIÓN INICIAL DE FECHAS EN MODAL =====
+    const fechaRequerimiento = document.getElementById('fecha-requerimiento');
+    const fechaProximaRevision = document.getElementById('fecha-proxima-revision');
+    
+    if (fechaRequerimiento) {
+        const hoy = new Date().toISOString().split('T')[0];
+        fechaRequerimiento.value = hoy;
+        
+        // Establecer fecha mínima para próxima revisión (mañana)
+        const manana = new Date();
+        manana.setDate(manana.getDate() + 1);
+        const mananaFormato = manana.toISOString().split('T')[0];
+        
+        if (fechaProximaRevision) {
+            fechaProximaRevision.min = mananaFormato;
+            fechaProximaRevision.value = mananaFormato;
+        }
+    }
+    
+    // ===== VALIDACIÓN DE FECHAS EN EL MODAL =====
+    if (fechaRequerimiento && fechaProximaRevision) {
+        fechaRequerimiento.addEventListener('change', function() {
+            const fechaReq = this.value;
+            if (fechaReq) {
+                // Establecer fecha mínima para próxima revisión
+                const fechaMinima = new Date(fechaReq);
+                fechaMinima.setDate(fechaMinima.getDate() + 1);
+                const fechaMinimaFormato = fechaMinima.toISOString().split('T')[0];
+                
+                fechaProximaRevision.min = fechaMinimaFormato;
+                
+                // Si la fecha de próxima revisión es menor que la nueva fecha mínima, actualizarla
+                if (fechaProximaRevision.value && fechaProximaRevision.value < fechaMinimaFormato) {
+                    fechaProximaRevision.value = fechaMinimaFormato;
+                }
+            }
+        });
+        
+        fechaProximaRevision.addEventListener('change', function() {
+            const fechaRevision = this.value;
+            const fechaReq = fechaRequerimiento.value;
+            
+            if (fechaRevision && fechaReq && fechaRevision <= fechaReq) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Fecha inválida',
+                    text: 'La fecha de próxima revisión debe ser posterior a la fecha del requerimiento.',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#3085d6',
+                    customClass: {
+                        popup: 'swal2-custom-popup',
+                        title: 'swal2-custom-title',
+                        content: 'swal2-custom-content',
+                        confirmButton: 'swal2-custom-button'
+                    }
+                });
+                
+                // Resetear a la fecha mínima válida
+                const fechaMinima = new Date(fechaReq);
+                fechaMinima.setDate(fechaMinima.getDate() + 1);
+                const fechaMinimaFormato = fechaMinima.toISOString().split('T')[0];
+                this.value = fechaMinimaFormato;
+            }
+        });
+    }
+
+    // ===== SWEETALERT DE ÉXITO CON BLADE =====
+    @if(session('success_alert'))
+        Swal.fire({
+            icon: 'success',
+            title: '¡Éxito!',
+            text: '{{ session('success_alert') }}',
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#00a65a',
+            customClass: {
+                popup: 'swal2-custom-popup',
+                title: 'swal2-custom-title',
+                content: 'swal2-custom-content',
+                confirmButton: 'swal2-custom-button'
+            }
+        });
+    @endif
+    
+    // ===== MANEJO DEL FORMULARIO =====
+    const formRequerimiento = document.getElementById('form-requerimiento');
+    const btnGuardar = document.getElementById('btn-guardar-requerimiento');
+    
+    if (formRequerimiento && btnGuardar) {
+        formRequerimiento.addEventListener('submit', function(e) {
+            // Mostrar indicador de carga
+            btnGuardar.disabled = true;
+            btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Guardando...';
+            
+            // El formulario se enviará normalmente
+            // La SweetAlert se mostrará después del redirect
+        });
+    }
+    
+    // ===== MANEJO DE DETALLES DE REQUERIMIENTO =====
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.btn-ver-detalles')) {
+            e.preventDefault();
+            const btn = e.target.closest('.btn-ver-detalles');
+            const idRegistro = btn.getAttribute('data-id');
+            
+            if (idRegistro) {
+                cargarDetallesRequerimiento(idRegistro);
+            }
+        }
+    });
+    
+    // ===== VALIDACIÓN INICIAL DE RUT =====
+    var rutInputValidacion = document.getElementById('rut_paciente');
+    if (rutInputValidacion && rutInputValidacion.value.trim() !== '') {
+        validarRut(rutInputValidacion.value.trim());
+    }
 });
 
+// ===== FUNCIONES EXTERNAS =====
 function validarCamposTexto() {
     const campos = [
         { id: 'nombres', nombre: 'Nombres', tipo: 'nombre' },
@@ -1038,177 +1047,60 @@ function mostrarErrorCampo(mensaje) {
     });
 }
 
-// Llamar la función al cargar
-document.addEventListener('DOMContentLoaded', function() {
-    validarCamposTexto();
+function cargarDetallesRequerimiento(idRegistro) {
+    console.log('Cargando detalles para registro:', idRegistro);
     
-    // Establecer fecha actual por defecto en el modal
-    const fechaRequerimiento = document.getElementById('fecha-requerimiento');
-    const fechaProximaRevision = document.getElementById('fecha-proxima-revision');
+    // Mostrar indicador de carga
+    document.getElementById('info-paciente-detalles').style.display = 'none';
+    document.getElementById('info-requerimiento-detalles').style.display = 'none';
     
-    if (fechaRequerimiento) {
-        const hoy = new Date().toISOString().split('T')[0];
-        fechaRequerimiento.value = hoy;
-        
-        // Establecer fecha mínima para próxima revisión (mañana)
-        const manana = new Date();
-        manana.setDate(manana.getDate() + 1);
-        const mananaFormato = manana.toISOString().split('T')[0];
-        
-        if (fechaProximaRevision) {
-            fechaProximaRevision.min = mananaFormato;
-            fechaProximaRevision.value = mananaFormato;
-        }
-    }
-    
-    // Validación de fechas en el modal
-    if (fechaRequerimiento && fechaProximaRevision) {
-        fechaRequerimiento.addEventListener('change', function() {
-            const fechaReq = this.value;
-            if (fechaReq) {
-                // Establecer fecha mínima para próxima revisión
-                const fechaMinima = new Date(fechaReq);
-                fechaMinima.setDate(fechaMinima.getDate() + 1);
-                const fechaMinimaFormato = fechaMinima.toISOString().split('T')[0];
+    // Hacer petición AJAX para obtener los detalles
+    fetch(`/requerimiento/detalles/${idRegistro}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Datos recibidos:', data);
+            if (data.success) {
+                // Cargar información del paciente
+                document.getElementById('detalles-rut').textContent = data.paciente.rut;
+                document.getElementById('detalles-nombre').textContent = data.paciente.nombre;
+                document.getElementById('detalles-sexo').textContent = data.paciente.sexo;
+                document.getElementById('detalles-comuna').textContent = data.paciente.comuna;
+                document.getElementById('detalles-servicio').textContent = data.paciente.servicio_salud;
+                document.getElementById('info-paciente-detalles').style.display = 'block';
                 
-                fechaProximaRevision.min = fechaMinimaFormato;
+                // Cargar información del requerimiento
+                document.getElementById('detalles-fecha-requerimiento').textContent = data.requerimiento.fecha_formateada;
+                document.getElementById('detalles-responsable').textContent = data.requerimiento.responsable;
+                document.getElementById('detalles-categoria').textContent = data.requerimiento.categoria;
+                document.getElementById('detalles-requerimiento').textContent = data.requerimiento.requerimiento;
+                document.getElementById('detalles-emisor').textContent = data.requerimiento.emisor;
+                document.getElementById('detalles-entidad').textContent = data.requerimiento.entidad;
+                document.getElementById('info-requerimiento-detalles').style.display = 'block';
                 
-                // Si la fecha de próxima revisión es menor que la nueva fecha mínima, actualizarla
-                if (fechaProximaRevision.value && fechaProximaRevision.value < fechaMinimaFormato) {
-                    fechaProximaRevision.value = fechaMinimaFormato;
-                }
-            }
-        });
-        
-        fechaProximaRevision.addEventListener('change', function() {
-            const fechaRevision = this.value;
-            const fechaReq = fechaRequerimiento.value;
-            
-            if (fechaRevision && fechaReq && fechaRevision <= fechaReq) {
+                // Mostrar el modal
+                var modal = new bootstrap.Modal(document.getElementById('modalDetallesRequerimiento'));
+                modal.show();
+            } else {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Fecha inválida',
-                    text: 'La fecha de próxima revisión debe ser posterior a la fecha del requerimiento.',
-                    confirmButtonText: 'Entendido',
-                    confirmButtonColor: '#3085d6',
-                    customClass: {
-                        popup: 'swal2-custom-popup',
-                        title: 'swal2-custom-title',
-                        content: 'swal2-custom-content',
-                        confirmButton: 'swal2-custom-button'
-                    }
-                });
-                
-                // Resetear a la fecha mínima válida
-                const fechaMinima = new Date(fechaReq);
-                fechaMinima.setDate(fechaMinima.getDate() + 1);
-                const fechaMinimaFormato = fechaMinima.toISOString().split('T')[0];
-                this.value = fechaMinimaFormato;
-            }
-        });
-    }
-    
-    // Mostrar SweetAlert de éxito si existe mensaje de sesión
-    @if(session('success_alert'))
-        Swal.fire({
-            icon: 'success',
-            title: '¡Éxito!',
-            text: '{{ session('success_alert') }}',
-            confirmButtonText: 'Aceptar',
-            confirmButtonColor: '#00a65a',
-            customClass: {
-                popup: 'swal2-custom-popup',
-                title: 'swal2-custom-title',
-                content: 'swal2-custom-content',
-                confirmButton: 'swal2-custom-button'
-            }
-        });
-    @endif
-    
-    // Manejar el envío del formulario
-    const formRequerimiento = document.getElementById('form-requerimiento');
-    const btnGuardar = document.getElementById('btn-guardar-requerimiento');
-    
-    if (formRequerimiento && btnGuardar) {
-        formRequerimiento.addEventListener('submit', function(e) {
-            // Mostrar indicador de carga
-            btnGuardar.disabled = true;
-            btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Guardando...';
-            
-            // El formulario se enviará normalmente
-            // La SweetAlert se mostrará después del redirect
-        });
-    }
-    
-    // Manejar clic en botón de ver detalles (ojo)
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.btn-ver-detalles')) {
-            e.preventDefault();
-            const btn = e.target.closest('.btn-ver-detalles');
-            const idRegistro = btn.getAttribute('data-id');
-            
-            if (idRegistro) {
-                cargarDetallesRequerimiento(idRegistro);
-            }
-        }
-    });
-    
-    // Función para cargar detalles del requerimiento
-    function cargarDetallesRequerimiento(idRegistro) {
-        console.log('Cargando detalles para registro:', idRegistro);
-        
-        // Mostrar indicador de carga
-        document.getElementById('info-paciente-detalles').style.display = 'none';
-        document.getElementById('info-requerimiento-detalles').style.display = 'none';
-        
-        // Hacer petición AJAX para obtener los detalles
-        fetch(`/requerimiento/detalles/${idRegistro}`)
-            .then(response => response.json())
-            .then(data => {
-                console.log('Datos recibidos:', data);
-                if (data.success) {
-                    // Cargar información del paciente
-                    document.getElementById('detalles-rut').textContent = data.paciente.rut;
-                    document.getElementById('detalles-nombre').textContent = data.paciente.nombre;
-                    document.getElementById('detalles-sexo').textContent = data.paciente.sexo;
-                    document.getElementById('detalles-comuna').textContent = data.paciente.comuna;
-                    document.getElementById('detalles-servicio').textContent = data.paciente.servicio_salud;
-                    document.getElementById('info-paciente-detalles').style.display = 'block';
-                    
-                    // Cargar información del requerimiento
-                    document.getElementById('detalles-fecha-requerimiento').textContent = data.requerimiento.fecha_formateada;
-                    document.getElementById('detalles-responsable').textContent = data.requerimiento.responsable;
-                    document.getElementById('detalles-categoria').textContent = data.requerimiento.categoria;
-                    document.getElementById('detalles-requerimiento').textContent = data.requerimiento.requerimiento;
-                    document.getElementById('detalles-emisor').textContent = data.requerimiento.emisor;
-                    document.getElementById('detalles-entidad').textContent = data.requerimiento.entidad;
-                    document.getElementById('info-requerimiento-detalles').style.display = 'block';
-                    
-                    // Mostrar el modal
-                    var modal = new bootstrap.Modal(document.getElementById('modalDetallesRequerimiento'));
-                    modal.show();
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.mensaje || 'No se pudieron cargar los detalles del requerimiento',
-                        confirmButtonText: 'OK',
-                        confirmButtonColor: '#3085d6'
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error al cargar detalles:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error de conexión',
-                    text: 'No se pudieron cargar los detalles del requerimiento',
+                    title: 'Error',
+                    text: data.mensaje || 'No se pudieron cargar los detalles del requerimiento',
                     confirmButtonText: 'OK',
                     confirmButtonColor: '#3085d6'
                 });
-                });
             }
+        })
+        .catch(error => {
+            console.error('Error al cargar detalles:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de conexión',
+                text: 'No se pudieron cargar los detalles del requerimiento',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3085d6'
+            });
         });
-    </script>
+}
+</script>
 
 @endsection

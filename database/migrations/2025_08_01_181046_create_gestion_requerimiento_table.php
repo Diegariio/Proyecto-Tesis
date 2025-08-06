@@ -12,9 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('gestion_requerimiento', function (Blueprint $table) {
-            $table->id();
+            $table->id('id_gestion_requerimiento');
             $table->unsignedBigInteger('id_registro_requerimiento');
             $table->unsignedBigInteger('id_gestion');
+            $table->unsignedBigInteger('id_respuesta');
             $table->string('estado_gestion')->default('PENDIENTE');
             $table->date('fecha_gestion');
             $table->text('respuesta')->nullable();
@@ -23,6 +24,7 @@ return new class extends Migration
             // Foreign keys
             $table->foreign('id_registro_requerimiento')->references('id_registro_requerimiento')->on('registro_requerimiento')->onDelete('cascade');
             $table->foreign('id_gestion')->references('id_gestion')->on('gestion')->onDelete('cascade');
+            $table->foreign('id_respuesta')->references('id_respuesta')->on('respuestas')->onDelete('cascade');
         });
     }
 

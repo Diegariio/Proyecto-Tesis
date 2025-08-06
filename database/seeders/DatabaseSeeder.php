@@ -13,6 +13,10 @@ use Database\Seeders\CodigoGESSeeder;
 use Database\Seeders\DiagnosticoSeeder;
 use Database\Seeders\QuimioterapiaConcominanteSeeder;
 use Database\Seeders\ComunaSeeder;
+use Database\Seeders\RespuestaSeeder;
+use Database\Seeders\GestionRequerimientoSeeder;
+use Database\Seeders\CierreRequerimientoSeeder;
+use Database\Seeders\ResolucionComiteSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -48,8 +52,12 @@ class DatabaseSeeder extends Seeder
         ResponsableSeeder::class,
         EntidadQueResuelveSeeder::class,
         EmisorRequerimientoSeeder::class,
+        CierreRequerimientoSeeder::class,
         RegistroRequerimientoSeeder::class,
         RequerimientoSeeder::class,
+        GestionRequerimientoSeeder::class,
+        RespuestaSeeder::class,
+        ResolucionComiteSeeder::class,
         ]);
     }
 }
