@@ -1,8 +1,10 @@
 # Dockerfile para Laravel con Apache
 FROM php:8.2-apache
 
-# Instalar dependencias del sistema
-RUN apt-get update && apt-get install -y \
+# Instalar dependencias del sistema con manejo de errores mejorado
+RUN apt-get clean && \
+    apt-get update --fix-missing && \
+    apt-get install -y --no-install-recommends \
     curl \
     git \
     unzip \
@@ -14,12 +16,16 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libzip-dev \
     mariadb-client \
-    nodejs \
-    npm \
-    && rm -rf /var/lib/apt/lists/*
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 # Configurar extensiones de GD
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg
+
+# Instalar Node.js y npm desde NodeSource
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs
 
 # Instalar extensiones PHP
 RUN docker-php-ext-install \
