@@ -11,35 +11,20 @@ class RegistroRequerimiento extends Model
     protected $fillable = [
         'id_requerimiento',
         'id_codigo',
+        'id_gestion',
         'rut',
         'id_categoria',
         'id_responsable',
         'id_entidad',
         'id_emisor',
-        'id_cierre_requerimiento',
         'fecha',
+        'resolucion_comite',
         'fecha_proxima_revision',
+        'resolucion_caso',
+        'fecha_gestion',
+        'respuesta',
         'observaciones',
-        'estado', // nuevo campo
     ];
-
-    // Estado calculado dinámicamente
-    public function getEstadoActualAttribute()
-    {
-        if ($this->id_cierre_requerimiento) {
-            return 'cerrado';
-        }
-        if ($this->gestiones()->count() > 0) {
-            return 'gestiones en curso';
-        }
-        return 'sin gestiones';
-    }
-
-    // Relación con gestiones
-    public function gestiones()
-    {
-        return $this->hasMany(\App\Models\GestionRequerimiento::class, 'id_registro_requerimiento');
-    }
 
     public function paciente()
     {
@@ -51,6 +36,10 @@ class RegistroRequerimiento extends Model
         return $this->belongsTo(CodigoCie10::class, 'id_codigo');
     }
 
+    public function gestion()
+    {
+        return $this->belongsTo(Gestion::class, 'id_gestion');
+    }
 
     public function categoria()
     {
@@ -81,8 +70,4 @@ class RegistroRequerimiento extends Model
 {
     return $this->belongsTo(Requerimiento::class, 'id_requerimiento');
 }
-    public function cierre()
-    {
-        return $this->belongsTo(CierreRequerimiento::class, 'id_cierre_requerimiento');
-    }
 }

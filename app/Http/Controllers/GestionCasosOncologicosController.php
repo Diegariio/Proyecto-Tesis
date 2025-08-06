@@ -11,11 +11,6 @@ use App\Models\Requerimiento;
 use App\Models\Responsable;
 use App\Models\Paciente;
 use App\Models\EmisorRequerimiento;
-use App\Models\Tiene;
-use App\Models\GestionRequerimiento;
-use App\Models\ResolucionComite;
-use App\Models\Gestion;
-use App\Models\Respuesta;
 
 class GestionCasosOncologicosController extends Controller
 {
@@ -24,17 +19,17 @@ class GestionCasosOncologicosController extends Controller
         $request->validate([
             'rut' => 'required|regex:/^[0-9]{1,2}\.[0-9]{3}\.[0-9]{3}-[0-9kK]$/'
         ]);
-
+    
         $rut = $request->input('rut');
-
-        // Buscar los códigos CIE10 asociados al RUT a través de la tabla 'tiene'
-        $codigosCie10 = Tiene::where('rut', $rut)
+    
+        // Buscar los códigos CIE10 asociados al RUT
+        $codigosCie10 = RegistroRequerimiento::where('rut', $rut)
             ->with('codigo:id_codigo,codigo_cie10,descripcion')
             ->get()
             ->pluck('codigo')
             ->unique('id_codigo')
             ->values();
-
+    
         return response()->json([
             'success' => true,
             'codigos' => $codigosCie10
@@ -47,7 +42,6 @@ class GestionCasosOncologicosController extends Controller
             'fecha-hasta' => 'nullable|date|after_or_equal:fecha-desde',
             'fecha-proxima-revision' => 'nullable|date',
             'rut-paciente' => 'nullable|regex:/^[0-9]{1,2}\.[0-9]{3}\.[0-9]{3}-[0-9kK]$/',
-            'numero-archivo' => 'nullable|string|max:8',
             'nombres' => 'nullable|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/|min:2|max:50',
             'primer-apellido' => 'nullable|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s-]+$/|min:2|max:50',
             'segundo-apellido' => 'nullable|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s-]+$/|min:2|max:50',
@@ -66,8 +60,7 @@ class GestionCasosOncologicosController extends Controller
             'requerimiento',
             'categoria',
             'entidad',
-            'emisor',
-            'gestiones'       // Necesario para calcular el estado_actual
+            'emisor'
         ]);
     
         // Filtro por RUT (prioridad alta)
@@ -93,12 +86,8 @@ class GestionCasosOncologicosController extends Controller
                 $pacientesQuery->where('segundo_apellido', 'LIKE', '%' . $request->input('segundo-apellido') . '%');
             }
             
-            if ($request->filled('numero-archivo')) {
-                $pacientesQuery->where('numero_archivo', 'LIKE', '%' . $request->input('numero-archivo') . '%');
-            }
-            
             // Si se aplicaron filtros de nombres, obtener los RUTs
-            if ($request->filled('nombres') || $request->filled('primer-apellido') || $request->filled('segundo-apellido') || $request->filled('numero-archivo')) {
+            if ($request->filled('nombres') || $request->filled('primer-apellido') || $request->filled('segundo-apellido')) {
                 $rutsEncontrados = $pacientesQuery->pluck('rut');
                 
                 if ($rutsEncontrados->count() > 0) {
@@ -108,7 +97,7 @@ class GestionCasosOncologicosController extends Controller
                     $query->where('rut', 'INEXISTENTE');
                 }
             }
-        }
+}
     
         // Filtros por fechas de creación
         if ($request->filled('fecha-desde')) {
@@ -144,50 +133,18 @@ class GestionCasosOncologicosController extends Controller
             $query->where('id_requerimiento', $request->input('requerimiento'));
         }
     
-        // Filtro por responsable
+        // NUEVO: Filtro por responsable
         if ($request->filled('responsable')) {
             $query->where('id_responsable', $request->input('responsable'));
         }
     
-        // Solo ejecutar la consulta si hay algún filtro aplicado (restaurar funcionalidad original)
-        $hayFiltros = $request->filled('fecha-desde') || 
-                      $request->filled('fecha-hasta') || 
-                      $request->filled('fecha-proxima-revision') || 
-                      $request->filled('rut-paciente') ||
-                      $request->filled('nombres') || 
-                      $request->filled('primer-apellido') || 
-                      $request->filled('segundo-apellido') || 
-                      $request->filled('categoria') || 
-                      $request->filled('cie10') ||
-                      $request->filled('entidad') || 
-                      $request->filled('requerimiento') || 
-                      $request->filled('responsable') || 
-                      $request->filled('numero-archivo');
-        
-        \Log::info('DEBUG - Filtros aplicados:', [
-            'hayFiltros' => $hayFiltros,
-            'rut-paciente' => $request->input('rut-paciente'),
-            'rut-paciente_filled' => $request->filled('rut-paciente')
-        ]);
-        
-        if ($hayFiltros) {
-            $resultados = $query->get();
-            \Log::info('DEBUG - Consulta ejecutada:', [
-                'sql' => $query->toSql(),
-                'bindings' => $query->getBindings(),
-                'resultados_count' => $resultados->count()
-            ]);
-        } else {
-            $resultados = collect(); // Colección vacía cuando no hay RUT
-            \Log::info('DEBUG - Sin RUT aplicado, devolviendo colección vacía');
-        }
+        $resultados = $query->get();
     
         // Debugging mejorado
         $debugData = [
-            'sql' => $hayFiltros ? $query->toSql() : 'No se ejecutó consulta - sin filtros',
-            'bindings' => $hayFiltros ? $query->getBindings() : [],
+            'sql' => $query->toSql(),
+            'bindings' => $query->getBindings(),
             'request_data' => $request->all(),
-            'hay_filtros' => $hayFiltros,
             'resultados_count' => $resultados->count(),
             'primer_registro' => $resultados->first() ? [
                 'id' => $resultados->first()->id,
@@ -253,7 +210,7 @@ class GestionCasosOncologicosController extends Controller
             'mensaje' => 'RUT válido',
             'paciente' => [
                 'nombre' => $paciente->nombre,
-                'apellidos' => $paciente->primer_apellido . ' ' . $paciente->segundo_apellido
+                'apellidos' => $paciente->apellidos
             ]
         ]);
     }
@@ -328,25 +285,7 @@ public function buscarPacientePorRut(Request $request)
         ]);
     }
 }
-public function infoCasoOncologico(Request $request)
-{
-    $rut = $request->query('rut');
-    $tienes = \App\Models\Tiene::where('rut', $rut)->with('codigo')->get();
 
-    $diagnosticos = $tienes->map(function($tiene) {
-        $resolucion = \App\Models\ResolucionComite::where('id_tiene', $tiene->id_tiene)->first();
-        return [
-            'codigo' => $tiene->codigo->codigo_cie10 ?? '',
-            'descripcion' => $tiene->codigo->descripcion ?? '',
-            'resolucion_comite' => $resolucion ? $resolucion->resolucion_comite : 'Sin resolución'
-        ];
-    });
-
-    return response()->json([
-        'success' => true,
-        'diagnosticos' => $diagnosticos
-    ]);
-}
 public function obtenerDetallesRequerimiento($idRegistro)
 {
     try {
@@ -358,8 +297,7 @@ public function obtenerDetallesRequerimiento($idRegistro)
             'responsable',
             'requerimiento',
             'entidad',
-            'emisor',
-            'cierre'
+            'emisor'
         ])->find($idRegistro);
         
         if (!$registro) {
@@ -385,13 +323,7 @@ public function obtenerDetallesRequerimiento($idRegistro)
             'categoria' => $registro->categoria ? $registro->categoria->tipo_categoria : 'N/A',
             'requerimiento' => $registro->requerimiento ? $registro->requerimiento->requerimiento : 'N/A',
             'emisor' => $registro->emisor ? $registro->emisor->catalogo : 'N/A',
-            'entidad' => $registro->entidad ? $registro->entidad->catalogo : 'N/A',
-            'resolucion_caso' => $registro->cierre ? $registro->cierre->catalogo_cierre ?? 'N/A' : '------', // Mostrar cierre si existe
-            'fecha_proxima_revision_formateada' => $registro->fecha_proxima_revision ? \Carbon\Carbon::parse($registro->fecha_proxima_revision)->format('d/m/Y') : 'N/A',
-            'observaciones' => $registro->observaciones ?? 'N/A',
-            'esta_cerrado' => $registro->id_cierre_requerimiento !== null, // Información sobre si está cerrado
-            'id_cierre_requerimiento' => $registro->id_cierre_requerimiento, // ID del cierre si existe
-            'estado_actual' => $registro->estado_actual, // Estado calculado
+            'entidad' => $registro->entidad ? $registro->entidad->catalogo : 'N/A'
         ];
         
         return response()->json([
@@ -405,259 +337,6 @@ public function obtenerDetallesRequerimiento($idRegistro)
         return response()->json([
             'success' => false,
             'mensaje' => 'Error interno del servidor'
-        ]);
-    }
-}
-public function diagnosticoResolucion($id)
-{
-    $registro = RegistroRequerimiento::find($id);
-    if (!$registro) {
-        return response()->json(['diagnostico' => '', 'resolucion' => '']);
-    }
-    $cie10 = odigoCie10::find($registro->id_codigo);
-    $diagnostico = $cie10 ? ($cie10->codigo_cie10 . ' - ' . $cie10->descripcion) : '';
-    $tiene = Tiene::where('rut', $registro->rut)->where('id_codigo', $registro->id_codigo)->first();
-    $resolucion = '';
-    if ($tiene) {
-        $res = ResolucionComite::where('id_tiene', $tiene->id_tiene)->first();
-        $resolucion = $res ? $res->resolucion_comite : '';
-    }
-    return response()->json(['diagnostico' => $diagnostico, 'resolucion' => $resolucion]);
-}
-public function guardarGestionRequerimiento(Request $request)
-{
-    try {
-        // Validar los datos de entrada
-        $request->validate([
-            'id_registro_requerimiento' => 'required|integer',
-            'fecha_gestion' => 'required|date',
-            'id_gestion' => 'required|integer',
-            'id_respuesta' => 'nullable|integer'
-        ]);
-
-        $idRegistro = $request->input('id_registro_requerimiento');
-        $fechaGestion = $request->input('fecha_gestion');
-        $idGestion = $request->input('id_gestion');
-        $idRespuesta = $request->input('id_respuesta');
-
-        // Buscar el registro de requerimiento
-        $registro = \App\Models\RegistroRequerimiento::find($idRegistro);
-        if (!$registro) {
-            return response()->json(['success' => false, 'message' => 'Registro de requerimiento no encontrado']);
-        }
-
-        \Log::info('Registro encontrado:', [
-            'id' => $registro->id_registro_requerimiento,
-            'rut' => $registro->rut,
-            'id_codigo' => $registro->id_codigo
-        ]);
-
-        // Crear la gestión de requerimiento directamente
-        // No necesitamos buscar en la tabla "tiene" para este proceso
-        $gestionRequerimiento = new \App\Models\GestionRequerimiento();
-        $gestionRequerimiento->id_registro_requerimiento = $idRegistro;
-        $gestionRequerimiento->id_gestion = $idGestion;
-        $gestionRequerimiento->id_respuesta = $idRespuesta; // Puede ser null
-        $gestionRequerimiento->fecha_gestion = $fechaGestion;
-        $gestionRequerimiento->estado_gestion = 'PENDIENTE'; // Valor por defecto
-        // El campo 'respuesta' (texto) se deja null por ahora
-        $gestionRequerimiento->save();
-
-        \Log::info('Gestión de requerimiento guardada:', [
-            'id_gestion_requerimiento' => $gestionRequerimiento->id_gestion_requerimiento,
-            'id_registro_requerimiento' => $idRegistro,
-            'id_gestion' => $idGestion,
-            'id_respuesta' => $idRespuesta,
-            'fecha_gestion' => $fechaGestion
-        ]);
-
-        return response()->json(['success' => true, 'message' => 'Gestión guardada correctamente']);
-
-    } catch (\Exception $e) {
-        \Log::error('Error al guardar gestión: ' . $e->getMessage());
-        return response()->json(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()]);
-    }
-}
-
-public function opcionesGestion()
-{
-    $gestiones = Gestion::all(['id_gestion', 'gestion']);
-    
-    return response()->json([
-        'success' => true,
-        'gestiones' => $gestiones
-    ]);
-}
-
-public function opcionesRespuesta()
-{
-    $respuestas = Respuesta::all(['id_respuesta', 'catalogo_respuestas']);
-    
-    // Mapear el campo para que el frontend reciba 'respuesta'
-    $respuestasFormateadas = $respuestas->map(function($respuesta) {
-        return [
-            'id_respuesta' => $respuesta->id_respuesta,
-            'respuesta' => $respuesta->catalogo_respuestas
-        ];
-    });
-    
-    return response()->json([
-        'success' => true,
-        'respuestas' => $respuestasFormateadas
-    ]);
-}
-
-public function obtenerGestionesRequerimiento($idRegistroRequerimiento)
-{
-    try {
-        $gestiones = \App\Models\GestionRequerimiento::where('id_registro_requerimiento', $idRegistroRequerimiento)
-            ->with(['gestion:id_gestion,gestion', 'respuesta:id_respuesta,catalogo_respuestas'])
-            ->orderBy('fecha_gestion', 'desc')
-            ->get();
-
-        $gestionesFormateadas = $gestiones->map(function($gestion) {
-            return [
-                'id_gestion_requerimiento' => $gestion->id_gestion_requerimiento,
-                'estado_gestion' => $gestion->estado_gestion,
-                'fecha_gestion' => $gestion->fecha_gestion ? \Carbon\Carbon::parse($gestion->fecha_gestion)->format('Y-m-d') : '',
-                'fecha_gestion_formateada' => $gestion->fecha_gestion ? \Carbon\Carbon::parse($gestion->fecha_gestion)->format('d/m/Y') : 'N/A',
-                'gestion' => $gestion->gestion ? $gestion->gestion->gestion : 'N/A',
-                'respuesta' => $gestion->respuesta ? $gestion->respuesta->catalogo_respuestas : null,
-                'respuesta_texto' => $gestion->respuesta ? $gestion->respuesta->catalogo_respuestas : null,
-                'tiene_respuesta' => $gestion->tieneRespuesta()
-            ];
-        });
-
-        return response()->json([
-            'success' => true,
-            'gestiones' => $gestionesFormateadas
-        ]);
-
-    } catch (\Exception $e) {
-        \Log::error('Error al obtener gestiones: ' . $e->getMessage());
-        return response()->json([
-            'success' => false, 
-            'message' => 'Error al cargar las gestiones: ' . $e->getMessage()
-        ]);
-    }
-}
-
-public function actualizarRespuestaGestion(Request $request)
-{
-    try {
-        // Validar los datos de entrada
-        $request->validate([
-            'id_gestion_requerimiento' => 'required|integer',
-            'id_respuesta' => 'required|integer'
-        ]);
-
-        $idGestionRequerimiento = $request->input('id_gestion_requerimiento');
-        $idRespuesta = $request->input('id_respuesta');
-
-        // Buscar la gestión de requerimiento
-        $gestionRequerimiento = \App\Models\GestionRequerimiento::find($idGestionRequerimiento);
-        if (!$gestionRequerimiento) {
-            return response()->json([
-                'success' => false, 
-                'message' => 'Gestión de requerimiento no encontrada'
-            ]);
-        }
-
-        // Actualizar la respuesta
-        $gestionRequerimiento->id_respuesta = $idRespuesta;
-        $saved = $gestionRequerimiento->save();
-
-        \Log::info('Respuesta actualizada para gestión:', [
-            'id_gestion_requerimiento' => $idGestionRequerimiento,
-            'id_respuesta' => $idRespuesta,
-            'guardado_exitoso' => $saved,
-            'tiene_respuesta_despues' => $gestionRequerimiento->tieneRespuesta()
-        ]);
-
-        return response()->json([
-            'success' => true, 
-            'message' => 'Respuesta añadida correctamente'
-        ]);
-
-    } catch (\Exception $e) {
-        \Log::error('Error al actualizar respuesta: ' . $e->getMessage());
-        return response()->json([
-            'success' => false, 
-            'message' => 'Error interno del servidor: ' . $e->getMessage()
-        ]);
-    }
-}
-
-public function opcionesCierre()
-{
-    $cierres = \App\Models\CierreRequerimiento::all(['id_cierre_requerimiento', 'catalogo_cierre']);
-    
-    return response()->json([
-        'success' => true,
-        'cierres' => $cierres
-    ]);
-}
-
-public function cerrarRequerimiento(Request $request)
-{
-    try {
-        // Validar los datos de entrada
-        $request->validate([
-            'id_registro_requerimiento' => 'required|integer',
-            'id_cierre_requerimiento' => 'required|integer|exists:cierre_requerimiento,id_cierre_requerimiento'
-        ]);
-
-        $idRegistro = $request->input('id_registro_requerimiento');
-        $idCierre = $request->input('id_cierre_requerimiento');
-
-        // Buscar el registro de requerimiento
-        $registro = \App\Models\RegistroRequerimiento::find($idRegistro);
-        if (!$registro) {
-            return response()->json([
-                'success' => false, 
-                'message' => 'Registro de requerimiento no encontrado'
-            ]);
-        }
-
-        // Verificar que no esté ya cerrado
-        if ($registro->id_cierre_requerimiento !== null) {
-            return response()->json([
-                'success' => false, 
-                'message' => 'Este requerimiento ya está cerrado'
-            ]);
-        }
-
-        // Verificar que todas las gestiones tengan respuesta
-        $gestionesSinRespuesta = \App\Models\GestionRequerimiento::where('id_registro_requerimiento', $idRegistro)
-            ->whereNull('id_respuesta')
-            ->count();
-
-        if ($gestionesSinRespuesta > 0) {
-            return response()->json([
-                'success' => false, 
-                'message' => 'No se puede cerrar el requerimiento. Hay gestiones sin respuesta.'
-            ]);
-        }
-
-        // Cerrar el requerimiento
-        $registro->id_cierre_requerimiento = $idCierre;
-        $registro->save();
-
-        \Log::info('Requerimiento cerrado:', [
-            'id_registro_requerimiento' => $idRegistro,
-            'id_cierre_requerimiento' => $idCierre
-        ]);
-
-        return response()->json([
-            'success' => true, 
-            'message' => 'Requerimiento cerrado correctamente'
-        ]);
-
-    } catch (\Exception $e) {
-        \Log::error('Error al cerrar requerimiento: ' . $e->getMessage());
-        return response()->json([
-            'success' => false, 
-            'message' => 'Error interno del servidor: ' . $e->getMessage()
         ]);
     }
 }

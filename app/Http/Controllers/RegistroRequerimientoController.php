@@ -13,7 +13,6 @@ class RegistroRequerimientoController extends Controller
         // Validar los datos recibidos
         $request->validate([
             'rut' => 'required|exists:paciente,rut',
-            'cie10' => 'required|exists:codigo_cie10,id_codigo',
             'categoria' => 'required|exists:categoria,id_categoria',
             'emisor' => 'required|exists:emisor_requerimiento,id_emisor',
             'fecha_requerimiento' => 'required|date',
@@ -35,11 +34,14 @@ class RegistroRequerimientoController extends Controller
         $registro->id_responsable = $request->responsable;
         $registro->id_entidad = $request->entidad;
         $registro->id_emisor = $request->emisor;
-        $registro->fecha = $request->fecha_requerimiento; 
+        $registro->fecha = $request->fecha_requerimiento;
         $registro->fecha_proxima_revision = $request->fecha_proxima_revision;
         $registro->observaciones = $request->observaciones;
-        $registro->id_cierre_requerimiento = null; // Por defecto null, se asigna cuando se cierre el requerimiento
-        $registro->id_codigo = $request->cie10; // Usar el CIE10 seleccionado
+        
+        // Valores por defecto para campos requeridos por la BD
+        $registro->id_codigo = 1; // Valor por defecto
+        $registro->id_gestion = 1; // Valor por defecto
+
         $registro->save();
 
         // Redirigir con mensaje de éxito para SweetAlert

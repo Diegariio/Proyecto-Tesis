@@ -32,28 +32,13 @@ class PacienteSeeder extends Seeder
     ];
     
 
-       // Array para almacenar números de archivo ya generados y evitar duplicados
-       $numerosArchivosUsados = [];
-       
        foreach ($pacientes as $paciente) {
-           // Generar número de archivo único aleatorio de máximo 8 dígitos
-           do {
-               $numeroArchivo = str_pad(rand(1, 99999999), 8, '0', STR_PAD_LEFT);
-           } while (in_array($numeroArchivo, $numerosArchivosUsados));
-           
-           $numerosArchivosUsados[] = $numeroArchivo;
-           
-           // Asignar edad específica para Diego Antonio, aleatoria para otros
-           $edad = ($paciente['rut'] === '21.012.009-2') ? 23 : rand(18, 85);
-           
            Paciente::updateOrCreate(
                ['rut' => $paciente['rut']],
                [
-                   'numero_archivo' => $numeroArchivo,
                    'nombre' => $paciente['nombre'], 
                    'primer_apellido' => $paciente['primer_apellido'],
                    'segundo_apellido' => $paciente['segundo_apellido'],
-                   'edad' => $edad,
                    'id_comuna' => $paciente['id_comuna'],
                    'id_servicio' => $paciente['id_servicio_salud'],
                    'id_sexo' => $paciente['id_sexo']

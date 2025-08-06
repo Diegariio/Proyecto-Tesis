@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('resolucion_comite', function (Blueprint $table) {
-            $table->id('id_resolucion_comite');
-            $table->unsignedBigInteger('id_tiene');
-            $table->string('resolucion_comite');
-            $table->foreign('id_tiene')->references('id_tiene')->on('tiene');
+        Schema::create('tron_diagnostico', function (Blueprint $table) {
+            $table->id('id_diagnostico');
+            $table->string('codigo');
+            $table->string('nombre');
             $table->timestamps();
         });
     }
@@ -25,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('resolucion_comites');
+        Schema::dropIfExists('tron_diagnostico');
     }
 };
