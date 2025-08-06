@@ -121,18 +121,18 @@
 
                             <!-- Botones de acción -->
             <div class="d-flex flex-wrap gap-2 mt-4">
-                <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary">
                     <i class="fas fa-filter"></i> Filtrar
-                </button>
+                    </button>
                 
                 <button type="button" class="btn btn-secondary" id="btn-limpiar-filtros">
                     <i class="fas fa-eraser"></i> Limpiar
                 </button>
                 
-                <button type="button" class="btn btn-success" id="btn-agregar-requerimiento" disabled style="opacity: 0.5; pointer-events: none;">
+                    <button type="button" class="btn btn-success" id="btn-agregar-requerimiento" disabled style="opacity: 0.5; pointer-events: none;">
                         <i class="fas fa-plus-circle"></i> Agregar Nuevo Requerimiento
-                </button>
-            </div>
+                    </button>
+                </div>
             </form>
         </div>
     </div>
@@ -140,12 +140,12 @@
     @if($resultados->count() > 0)
     <!-- TÍTULO DE RESULTADOS -->
         <div class="card mt-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-search me-2"></i>
-                    Resultados de la búsqueda ({{ $resultados->count() }} registros encontrados)
-                </h5>
-            </div>
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-search me-2"></i>
+                Resultados de la búsqueda ({{ $resultados->count() }} registros encontrados)
+            </h5>
+        </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-sm table-hover text-nowrap mb-0">
@@ -156,7 +156,7 @@
                                 <th>Nombre Paciente</th>
                                 <th>Diagnóstico</th>
                                 <th>Fecha Requerimiento</th>
-                                <th>Fecha Próxima Revisión</th>
+                            <th>Fecha Próxima Revisión</th>
                                 <th>Requerimiento</th>
                                 <th>Responsable</th>
                             </tr>
@@ -171,7 +171,7 @@
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </td>
-                                <td>{{ $registro->paciente->rut ?? 'N/A' }}</td>
+                                        <td>{{ $registro->paciente->rut ?? 'N/A' }}</td>
                                 <td>
                                     {{ $registro->paciente->nombre ?? '' }} 
                                     {{ $registro->paciente->primer_apellido ?? '' }} 
@@ -217,13 +217,13 @@
                                         N/A (ID: {{ $registro->id_responsable }})
                                     @endif
                                 </td>
-                            </tr>
+                                    </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
             </div>
-        </div>
+    </div>
 @else
     <!-- MENSAJE CUANDO NO HAY RESULTADOS -->
     <div class="card mt-4">
@@ -313,6 +313,7 @@
 <form id="form-requerimiento" method="POST" action="{{ route('registroRequerimiento.store') }}">
     @csrf
     <input type="hidden" name="rut" id="input-rut-modal">
+    <input type="hidden" name="cie10" id="input-cie10-modal">
     
     <!-- Primera fila: Categoría, Emisor del Requerimiento, Fecha del Requerimiento -->
     <div class="row mb-3">
@@ -520,7 +521,7 @@
             <i class="fas fa-plus me-1"></i>
             Agregar Gestión
           </button>
-          <button type="button" class="btn btn-danger" id="btn-cerrar-requerimiento">
+          <button type="button" class="btn btn-danger" id="btn-cerrar-requerimiento" data-id="" disabled>
             <i class="fas fa-lock me-1"></i>
             Cerrar Requerimiento
           </button>
@@ -535,14 +536,41 @@
             </h6>
           </div>
           <div class="card-body">
-            <div class="alert alert-info mb-0">
-              <i class="fas fa-info-circle me-2"></i>
-              Aquí se mostrará el historial de gestiones del requerimiento.
+            <!-- Loading -->
+            <div id="gestiones-loading" class="text-center py-3">
+              <i class="fas fa-spinner fa-spin me-2"></i>
+              Cargando gestiones...
             </div>
+            
+            <!-- Sin gestiones -->
+            <div id="gestiones-vacio" class="alert alert-info mb-0" style="display: none;">
+              <i class="fas fa-info-circle me-2"></i>
+              No hay gestiones registradas para este requerimiento.
+            </div>
+            
+            <!-- Tabla de gestiones -->
+            <div id="gestiones-tabla" style="display: none;">
+              <div class="table-responsive">
+                <table class="table table-sm table-hover text-nowrap mb-0">
+                  <thead>
+                    <tr>
+                      <th>Acción</th>
+                      <th>Estado de la Gestión</th>
+                      <th>Fecha Gestión</th>
+                      <th>Gestión</th>
+                      <th>Respuesta</th>
+                    </tr>
+                  </thead>
+                  <tbody id="gestiones-tbody">
+                    <!-- Contenido dinámico -->
+                  </tbody>
+                </table>
           </div>
         </div>
       </div>
     </div>
+  </div>
+</div>
   </div>
 </div>
 
@@ -583,14 +611,81 @@
     </div>
   </div>
 </div>
+<!-- Modal: Añadir Respuesta -->
+<div class="modal fade" id="modalAñadirRespuesta" tabindex="-1" aria-labelledby="modalAñadirRespuestaLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <form id="form-añadir-respuesta">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title" id="modalAñadirRespuestaLabel">Añadir Respuesta</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="respuesta-select" class="form-label">Seleccionar Respuesta</label>
+            <select class="form-select" id="respuesta-select" name="id_respuesta" required>
+              <option value="">Seleccione una respuesta</option>
+              <!-- Opciones dinámicas -->
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-success">Guardar Respuesta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Cerrar Requerimiento -->
+<div class="modal fade" id="modalCerrarRequerimiento" tabindex="-1" aria-labelledby="modalCerrarRequerimientoLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <form id="form-cerrar-requerimiento">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title" id="modalCerrarRequerimientoLabel">
+            <i class="fas fa-lock me-2"></i>Cerrar Requerimiento
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-warning" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>¡Atención!</strong> Al cerrar este requerimiento no se podrán agregar más gestiones.
+          </div>
+          
+          <div class="mb-3">
+            <label for="cierre-select" class="form-label">Tipo de Cierre</label>
+            <select name="id_cierre_requerimiento" id="cierre-select" class="form-select" required>
+              <option value="">Seleccione el tipo de cierre</option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label for="observaciones-cierre" class="form-label">Observaciones de Cierre (Opcional)</label>
+            <textarea name="observaciones_cierre" id="observaciones-cierre" class="form-control" rows="3" placeholder="Ingrese observaciones adicionales sobre el cierre..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger">
+            <i class="fas fa-lock me-1"></i>Cerrar Requerimiento
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <style>
   .modal-backdrop.show { background-color: #222 !important; opacity: 0.95 !important; }
 </style>
 
-<script>
+    <script>
 document.addEventListener('DOMContentLoaded', function() {
     // ===== VARIABLES GLOBALES =====
-    const rutInput = document.getElementById('rut-paciente');
+            const rutInput = document.getElementById('rut-paciente');
     const grut = document.getElementById('grut');
     const iconrut = document.getElementById('iconrut');
     const cie10Select = document.getElementById('cie10');
@@ -598,9 +693,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     let timeoutId;
     let rutValidado = false;
-
+    
     // ===== FORMATEO Y VALIDACIÓN DE RUT =====
-    if (rutInput) {
+            if (rutInput) {
         // Event listener para input
         rutInput.addEventListener('input', function(e) {
             let value = e.target.value;
@@ -647,48 +742,48 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ===== FUNCIONES DE FORMATEO DE RUT =====
-    function formatearRUT(input) {
-        // Remover todo excepto números y K/k
-        let cleanValue = input.replace(/[^\dKk]/g, '');
-        
-        // Si hay una K o k, asegurar que esté solo al final
-        let hasK = /[Kk]/.test(cleanValue);
-        let dvChar = '';
-        
-        if (hasK) {
-            // Extraer la K y ponerla al final
-            cleanValue = cleanValue.replace(/[Kk]/g, '');
-            dvChar = 'K';
-        }
-        
-        // Si no hay K pero hay números, el último número es el DV
-        if (!hasK && cleanValue.length > 1) {
-            dvChar = cleanValue.slice(-1);
-            cleanValue = cleanValue.slice(0, -1);
-        } else if (!hasK && cleanValue.length === 1) {
-            return cleanValue;
-        }
-        
-        // Si solo tenemos números sin DV, no formatear aún
-        if (!dvChar && cleanValue.length <= 8) {
-            return cleanValue;
-        }
-        
-        // Formatear el cuerpo del RUT con puntos
-        if (cleanValue.length > 0) {
-            let formatted = '';
-            let reversed = cleanValue.split('').reverse().join('');
+        function formatearRUT(input) {
+            // Remover todo excepto números y K/k
+            let cleanValue = input.replace(/[^\dKk]/g, '');
             
-            for (let i = 0; i < reversed.length; i++) {
-                if (i !== 0 && i % 3 === 0) {
-                    formatted = '.' + formatted;
-                }
-                formatted = reversed[i] + formatted;
+            // Si hay una K o k, asegurar que esté solo al final
+            let hasK = /[Kk]/.test(cleanValue);
+            let dvChar = '';
+            
+            if (hasK) {
+                // Extraer la K y ponerla al final
+                cleanValue = cleanValue.replace(/[Kk]/g, '');
+                dvChar = 'K';
             }
             
-            return formatted + (dvChar ? '-' + dvChar : '');
-        } else {
-            return dvChar ? '-' + dvChar : '';
+            // Si no hay K pero hay números, el último número es el DV
+            if (!hasK && cleanValue.length > 1) {
+                dvChar = cleanValue.slice(-1);
+                cleanValue = cleanValue.slice(0, -1);
+            } else if (!hasK && cleanValue.length === 1) {
+                return cleanValue;
+            }
+            
+            // Si solo tenemos números sin DV, no formatear aún
+            if (!dvChar && cleanValue.length <= 8) {
+                return cleanValue;
+            }
+            
+            // Formatear el cuerpo del RUT con puntos
+            if (cleanValue.length > 0) {
+                        let formatted = '';
+                let reversed = cleanValue.split('').reverse().join('');
+                
+                        for (let i = 0; i < reversed.length; i++) {
+                            if (i !== 0 && i % 3 === 0) {
+                                formatted = '.' + formatted;
+                            }
+                            formatted = reversed[i] + formatted;
+                        }
+                
+                return formatted + (dvChar ? '-' + dvChar : '');
+            } else {
+                return dvChar ? '-' + dvChar : '';
         }
     }
 
@@ -730,109 +825,109 @@ document.addEventListener('DOMContentLoaded', function() {
             checkFields();
         });
     }
-
+    
     // ===== FUNCIONES DE ESTILO Y UI =====
     function mostrarExito() {
-        grut.className = 'form-group col-md-3';
-        const input = rutInput;
-        input.classList.add('is-valid');
-        iconrut.style.display = 'block';
-        iconrut.className = 'fas fa-check text-success';
-    }
+    grut.className = 'form-group col-md-3';
+    const input = rutInput;
+    input.classList.add('is-valid');
+    iconrut.style.display = 'block';
+    iconrut.className = 'fas fa-check text-success';
+}
 
-    function mostrarError(mensaje) {
-        grut.className = 'form-group col-md-3';
-        const input = rutInput;
-        input.classList.add('is-invalid');
-        iconrut.style.display = 'block';
-        iconrut.className = 'fas fa-times text-danger';
-        
-        Swal.fire({
-            icon: 'error',
-            title: 'Error!',
-            text: mensaje,
-            confirmButtonText: 'OK',
-            confirmButtonColor: '#3085d6',
-            customClass: {
-                popup: 'swal2-custom-popup',
-                title: 'swal2-custom-title',
-                content: 'swal2-custom-content',
-                confirmButton: 'swal2-custom-button'
-            }
-        });
-    }
+function mostrarError(mensaje) {
+    grut.className = 'form-group col-md-3';
+    const input = rutInput;
+    input.classList.add('is-invalid');
+    iconrut.style.display = 'block';
+    iconrut.className = 'fas fa-times text-danger';
+    
+    Swal.fire({
+        icon: 'error',
+        title: 'Error!',
+        text: mensaje,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6',
+        customClass: {
+            popup: 'swal2-custom-popup',
+            title: 'swal2-custom-title',
+            content: 'swal2-custom-content',
+            confirmButton: 'swal2-custom-button'
+        }
+    });
+}
 
-    function resetearEstilo() {
-        grut.className = 'form-group col-md-3';
-        const input = rutInput;
-        input.classList.remove('is-valid', 'is-invalid');
-        iconrut.style.display = 'none';
-    }
+function resetearEstilo() {
+    grut.className = 'form-group col-md-3';
+    const input = rutInput;
+    input.classList.remove('is-valid', 'is-invalid');
+    iconrut.style.display = 'none';
+}
 
     // ===== FUNCIONES DE CIE10 =====
-    function obtenerCie10PorRut(rut) {
-        fetch('/obtener-cie10-por-rut', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ rut: rut })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                filtrarSelectCie10(data.codigos);
-            } else {
-                console.error('Error al obtener códigos CIE10');
-                restaurarTodosLosCie10();
-            }
-        })
-        .catch(error => {
-            console.error('Error en la petición:', error);
+function obtenerCie10PorRut(rut) {
+    fetch('/obtener-cie10-por-rut', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ rut: rut })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            filtrarSelectCie10(data.codigos);
+        } else {
+            console.error('Error al obtener códigos CIE10');
             restaurarTodosLosCie10();
-        });
-    }
+        }
+    })
+    .catch(error => {
+        console.error('Error en la petición:', error);
+        restaurarTodosLosCie10();
+    });
+}
 
-    function filtrarSelectCie10(codigosEncontrados) {
-        const selectCie10 = document.getElementById('cie10');
-        const todasLasOpciones = selectCie10.querySelectorAll('option');
+function filtrarSelectCie10(codigosEncontrados) {
+    const selectCie10 = document.getElementById('cie10');
+    const todasLasOpciones = selectCie10.querySelectorAll('option');
         
         // Obtener el valor previo (del request de Laravel)
         const valorPrevio = selectCie10.value || '{{ request("cie10") }}' || '';
-        
-        // Obtener los IDs de los códigos encontrados
-        const codigosIds = codigosEncontrados.map(codigo => codigo.id_codigo);
-        
-        // Mostrar/ocultar opciones según si están en los resultados
-        todasLasOpciones.forEach(option => {
-            if (option.value === '') {
-                // Mantener la opción "Seleccionar CIE 10" siempre visible
-                option.style.display = '';
-            } else {
-                // Mostrar solo si está en los códigos encontrados
-                option.style.display = codigosIds.includes(parseInt(option.value)) ? '' : 'none';
-            }
-        });
-        
+    
+    // Obtener los IDs de los códigos encontrados
+    const codigosIds = codigosEncontrados.map(codigo => codigo.id_codigo);
+    
+    // Mostrar/ocultar opciones según si están en los resultados
+    todasLasOpciones.forEach(option => {
+        if (option.value === '') {
+            // Mantener la opción "Seleccionar CIE 10" siempre visible
+            option.style.display = '';
+        } else {
+            // Mostrar solo si está en los códigos encontrados
+            option.style.display = codigosIds.includes(parseInt(option.value)) ? '' : 'none';
+        }
+    });
+    
         // Mantener la selección previa si existe y está disponible en las opciones filtradas
         if (valorPrevio && codigosIds.includes(parseInt(valorPrevio))) {
             selectCie10.value = valorPrevio;
             console.log('Manteniendo selección previa de CIE10:', valorPrevio);
         } else {
             // Solo limpiar si no hay valor previo válido
-            selectCie10.value = '';
+    selectCie10.value = '';
         }
-    }
+}
 
-    function restaurarTodosLosCie10() {
-        const selectCie10 = document.getElementById('cie10');
-        const todasLasOpciones = selectCie10.querySelectorAll('option');
-        
+function restaurarTodosLosCie10() {
+    const selectCie10 = document.getElementById('cie10');
+    const todasLasOpciones = selectCie10.querySelectorAll('option');
+    
         // Obtener el valor previo (del request de Laravel)
         const valorPrevio = '{{ request("cie10") }}' || '';
         
-        todasLasOpciones.forEach(option => {
+    todasLasOpciones.forEach(option => {
             option.style.display = '';
         });
         
@@ -841,23 +936,23 @@ document.addEventListener('DOMContentLoaded', function() {
             selectCie10.value = valorPrevio;
             console.log('Restaurando selección previa de CIE10:', valorPrevio);
         } else {
-            selectCie10.value = '';
-        }
+    selectCie10.value = '';
+}
     }
 
     // ===== VALIDACIÓN DE CAMPOS =====
     function checkFields() {
         if (rutValidado && cie10Select && cie10Select.value.trim() !== '') {
             if (btnAgregar) {
-                btnAgregar.disabled = false;
-                btnAgregar.style.opacity = 1;
-                btnAgregar.style.pointerEvents = 'auto';
+            btnAgregar.disabled = false;
+            btnAgregar.style.opacity = 1;
+            btnAgregar.style.pointerEvents = 'auto';
             }
         } else {
             if (btnAgregar) {
-                btnAgregar.disabled = true;
-                btnAgregar.style.opacity = 0.5;
-                btnAgregar.style.pointerEvents = 'none';
+            btnAgregar.disabled = true;
+            btnAgregar.style.opacity = 0.5;
+            btnAgregar.style.pointerEvents = 'none';
             }
         }
     }
@@ -894,7 +989,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnAgregar && rutInput) {
         btnAgregar.addEventListener('click', function() {
             const rut = rutInput.value.trim();
+            const cie10 = cie10Select.value.trim();
+            
             document.getElementById('input-rut-modal').value = rut;
+            document.getElementById('input-cie10-modal').value = cie10;
 
             // Ocultar recuadros antes de cargar
             document.getElementById('info-paciente-modal').style.display = 'none';
@@ -1013,7 +1111,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-
+    
     // ===== SWEETALERT DE ÉXITO CON BLADE =====
     @if(session('success_alert'))
         Swal.fire({
@@ -1122,7 +1220,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Event listener para el botón agregar gestión
     document.addEventListener('click', function(e) {
         const btn = e.target.closest('#btn-agregar-gestion');
-        if (btn) {
+        if (btn && !btn.disabled) {
             idRequerimientoActual = btn.getAttribute('data-id');
             cargarOpcionesGestion();
             cargarOpcionesRespuesta();
@@ -1177,8 +1275,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Mostrar mensaje de éxito
                 mostrarAlerta('success', data.message || 'Gestión guardada correctamente');
                 
-                // Recargar detalles del requerimiento
-                cargarDetallesRequerimiento(idRequerimientoActual);
+                // Recargar historial de gestiones
+                cargarGestionesRequerimiento(idRequerimientoActual);
             } else {
                 let mensaje = data.message || 'Error al guardar la gestión';
                 
@@ -1256,21 +1354,347 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // ===== FUNCIÓN PARA MOSTRAR ALERTAS =====
-    function mostrarAlerta(tipo, mensaje) {
-        const icono = tipo === 'success' ? 'success' : 'error';
-        const titulo = tipo === 'success' ? '¡Éxito!' : 'Error';
+    // ===== CERRAR REQUERIMIENTO =====
+    // Event listener para el botón cerrar requerimiento
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('#btn-cerrar-requerimiento');
+        if (btn && !btn.disabled) {
+            const idRegistro = btn.getAttribute('data-id');
+            if (idRegistro) {
+                // Cargar opciones de cierre
+                cargarOpcionesCierre();
+                
+                // Resetear formulario
+                document.getElementById('form-cerrar-requerimiento').reset();
+                
+                // Guardar el ID para usar en el submit
+                document.getElementById('form-cerrar-requerimiento').setAttribute('data-id', idRegistro);
+                
+                // Mostrar modal
+                var modal = new bootstrap.Modal(document.getElementById('modalCerrarRequerimiento'));
+                modal.show();
+            }
+        }
+    });
+
+    // Event listener para el formulario de cerrar requerimiento
+    document.getElementById('form-cerrar-requerimiento').addEventListener('submit', function(e) {
+        e.preventDefault();
         
+        const idRegistro = this.getAttribute('data-id');
+        if (!idRegistro) {
+            mostrarAlerta('error', 'No se ha seleccionado un requerimiento válido');
+            return;
+        }
+        
+        const formData = new FormData(this);
+        formData.append('id_registro_requerimiento', idRegistro);
+        
+        // Confirmar antes de cerrar
         Swal.fire({
-            icon: icono,
-            title: titulo,
-            text: mensaje,
-            confirmButtonText: 'Aceptar',
-            confirmButtonColor: '#3085d6'
-            // Se eliminó timer y timerProgressBar para que solo se cierre al hacer clic en "Aceptar"
+            title: '¿Está seguro?',
+            text: 'Una vez cerrado el requerimiento no se podrán agregar más gestiones.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, cerrar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Proceder con el cierre
+                fetch('/requerimiento/cerrar', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Respuesta del servidor (cerrar requerimiento):', data);
+                    
+                    if (data.success) {
+                        // Cerrar modal de cierre
+                        var modal = bootstrap.Modal.getInstance(document.getElementById('modalCerrarRequerimiento'));
+                        modal.hide();
+                        
+                        // Mostrar mensaje de éxito
+                        mostrarAlerta('success', data.message || 'Requerimiento cerrado correctamente');
+                        
+                        // Recargar los detalles del requerimiento para actualizar la información
+                        const idRegistro = document.getElementById('form-cerrar-requerimiento').getAttribute('data-id');
+                        if (idRegistro) {
+                            // Recargar la información del requerimiento usando la función existente
+                            mostrarDetalles(idRegistro);
+                        }
+                        
+                    } else {
+                        mostrarAlerta('error', data.message || 'Error al cerrar el requerimiento');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mostrarAlerta('error', 'Error al conectar con el servidor');
+                });
+            }
         });
+    });
+});
+
+// ===== FUNCIÓN GLOBAL PARA MOSTRAR ALERTAS =====
+function mostrarAlerta(tipo, mensaje) {
+    const icono = tipo === 'success' ? 'success' : 'error';
+    const titulo = tipo === 'success' ? '¡Éxito!' : 'Error';
+    
+    Swal.fire({
+        icon: icono,
+        title: titulo,
+        text: mensaje,
+        confirmButtonText: 'Aceptar',
+        confirmButtonColor: '#3085d6'
+        // Se eliminó timer y timerProgressBar para que solo se cierre al hacer clic en "Aceptar"
+    });
+}
+
+// ===== FUNCIONES GLOBALES PARA GESTIONES =====
+function cargarGestionesRequerimiento(idRegistro) {
+    // Mostrar loading
+    document.getElementById('gestiones-loading').style.display = 'block';
+    document.getElementById('gestiones-vacio').style.display = 'none';
+    document.getElementById('gestiones-tabla').style.display = 'none';
+    
+    fetch(`/requerimiento/${idRegistro}/gestiones`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Gestiones cargadas:', data);
+            
+            // Ocultar loading
+            document.getElementById('gestiones-loading').style.display = 'none';
+            
+            if (data.success && data.gestiones && data.gestiones.length > 0) {
+                // Mostrar tabla y llenar datos
+                document.getElementById('gestiones-tabla').style.display = 'block';
+                llenarTablaGestiones(data.gestiones);
+            } else {
+                // Mostrar mensaje de vacío
+                document.getElementById('gestiones-vacio').style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar gestiones:', error);
+            document.getElementById('gestiones-loading').style.display = 'none';
+            document.getElementById('gestiones-vacio').style.display = 'block';
+        });
+}
+
+function llenarTablaGestiones(gestiones) {
+    const tbody = document.getElementById('gestiones-tbody');
+    tbody.innerHTML = '';
+    
+    let puedeSerCerrado = true;
+    
+    // Verificar si hay gestiones sin respuesta
+    if (gestiones.length === 0) {
+        puedeSerCerrado = false; // No hay gestiones
+    } else {
+        // Verificar si todas las gestiones tienen respuesta
+        puedeSerCerrado = gestiones.every(gestion => gestion.tiene_respuesta);
+    }
+    
+    gestiones.forEach(gestion => {
+        const fila = document.createElement('tr');
+        
+        // Columna Acción
+        const accionTd = document.createElement('td');
+        if (!gestion.tiene_respuesta) {
+            accionTd.innerHTML = `
+                <button type="button" class="btn btn-sm btn-outline-primary btn-añadir-respuesta" 
+                        data-id="${gestion.id_gestion_requerimiento}">
+                    <i class="fas fa-plus me-1"></i>Añadir Respuesta
+                </button>
+            `;
+        } else {
+            accionTd.innerHTML = '<span class="text-muted">—</span>';
+        }
+        
+        // Columna Estado
+        const estadoTd = document.createElement('td');
+        estadoTd.innerHTML = obtenerBadgeEstado(gestion.estado_gestion);
+        
+        // Columna Fecha
+        const fechaTd = document.createElement('td');
+        fechaTd.textContent = gestion.fecha_gestion_formateada;
+        
+        // Columna Gestión
+        const gestionTd = document.createElement('td');
+        gestionTd.textContent = gestion.gestion;
+        
+        // Columna Respuesta
+        const respuestaTd = document.createElement('td');
+        respuestaTd.textContent = gestion.respuesta || gestion.respuesta_texto || '—';
+        
+        fila.appendChild(accionTd);
+        fila.appendChild(estadoTd);
+        fila.appendChild(fechaTd);
+        fila.appendChild(gestionTd);
+        fila.appendChild(respuestaTd);
+        
+        tbody.appendChild(fila);
+    });
+    
+    // Habilitar/deshabilitar botón de cerrar requerimiento solo si no está ya cerrado
+    const btnCerrar = document.getElementById('btn-cerrar-requerimiento');
+    if (btnCerrar) {
+        // Verificar si el botón ya indica que está cerrado (no modificar si ya está cerrado)
+        const yaCerrado = btnCerrar.innerHTML.includes('Requerimiento Cerrado');
+        
+        if (!yaCerrado) {
+            btnCerrar.disabled = !puedeSerCerrado;
+            
+            if (puedeSerCerrado) {
+                btnCerrar.classList.remove('btn-secondary');
+                btnCerrar.classList.add('btn-danger');
+                btnCerrar.title = 'Cerrar requerimiento';
+            } else {
+                btnCerrar.classList.remove('btn-danger');
+                btnCerrar.classList.add('btn-secondary');
+                if (gestiones.length === 0) {
+                    btnCerrar.title = 'Debe tener al menos una gestión para cerrar el requerimiento';
+                } else {
+                    btnCerrar.title = 'Todas las gestiones deben tener respuesta para cerrar el requerimiento';
+                }
+            }
+        }
+    }
+}
+
+function obtenerBadgeEstado(estado) {
+    switch(estado?.toUpperCase()) {
+        case 'ACTIVO':
+            return '<span class="badge text-bg-success"><small>ACTIVO</small></span>';
+        case 'PENDIENTE':
+            return '<span class="badge text-bg-warning"><small>PENDIENTE</small></span>';
+        case 'INACTIVO':
+            return '<span class="badge text-bg-danger"><small>INACTIVO</small></span>';
+        case 'EN PROCESO':
+            return '<span class="badge text-bg-primary"><small>EN PROCESO</small></span>';
+        case 'REVISIÓN':
+        case 'REVISION':
+            return '<span class="badge text-bg-info"><small>REVISIÓN</small></span>';
+        default:
+            return '<span class="badge text-bg-secondary"><small>SIN ESTADO</small></span>';
+    }
+}
+
+// ===== FUNCIÓN PARA MANEJAR BOTÓN AÑADIR RESPUESTA =====
+let idGestionRequerimientoActual = null;
+let idRegistroRequerimientoActual = null;
+
+// Event listener para botones "Añadir Respuesta" (usando delegación de eventos)
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.btn-añadir-respuesta')) {
+        const btn = e.target.closest('.btn-añadir-respuesta');
+        idGestionRequerimientoActual = btn.getAttribute('data-id');
+        
+        console.log('Abriendo modal para añadir respuesta, ID gestión:', idGestionRequerimientoActual);
+        
+        // Cargar opciones de respuesta
+        cargarOpcionesRespuestaModal();
+        
+        // Limpiar formulario
+        document.getElementById('form-añadir-respuesta').reset();
+        
+        // Abrir modal
+        var modal = new bootstrap.Modal(document.getElementById('modalAñadirRespuesta'));
+        modal.show();
     }
 });
+
+// Manejar envío del formulario de añadir respuesta
+document.getElementById('form-añadir-respuesta').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (!idGestionRequerimientoActual) {
+        mostrarAlerta('error', 'No se ha seleccionado una gestión válida');
+        return;
+    }
+    
+    const formData = new FormData(this);
+    formData.append('id_gestion_requerimiento', idGestionRequerimientoActual);
+    
+    fetch('/gestion-requerimiento/actualizar-respuesta', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Respuesta del servidor (añadir respuesta):', data);
+        
+        if (data.success) {
+            console.log('Éxito confirmado, cerrando modal...');
+            
+            // Cerrar modal
+            var modal = bootstrap.Modal.getInstance(document.getElementById('modalAñadirRespuesta'));
+            modal.hide();
+            
+            console.log('Modal cerrado, mostrando alerta...');
+            
+            // Mostrar mensaje de éxito
+            mostrarAlerta('success', data.message || 'Respuesta añadida correctamente');
+            
+            console.log('Alerta mostrada, recargando tabla...');
+            
+            // Recargar tabla de gestiones (necesitamos el id del registro de requerimiento)
+            // Lo obtenemos del botón de agregar gestión
+            const btnAgregarGestion = document.getElementById('btn-agregar-gestion');
+            if (btnAgregarGestion) {
+                const idRegistro = btnAgregarGestion.getAttribute('data-id');
+                console.log('ID de registro para recargar tabla:', idRegistro);
+                if (idRegistro) {
+                    cargarGestionesRequerimiento(idRegistro);
+                } else {
+                    console.error('No se encontró ID de registro en el botón agregar gestión');
+                }
+            } else {
+                console.error('No se encontró el botón agregar gestión');
+            }
+        } else {
+            console.log('Error del servidor:', data.message);
+            mostrarAlerta('error', data.message || 'Error al añadir la respuesta');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarAlerta('error', 'Error al conectar con el servidor');
+    });
+});
+
+// Función para cargar opciones de respuesta en el modal
+function cargarOpcionesRespuestaModal() {
+    fetch('/respuestas/opciones')
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('respuesta-select');
+            select.innerHTML = '<option value="">Seleccione una respuesta</option>';
+            
+            if (data.success && data.respuestas) {
+                data.respuestas.forEach(respuesta => {
+                    const option = document.createElement('option');
+                    option.value = respuesta.id_respuesta;
+                    option.textContent = respuesta.respuesta;
+                    select.appendChild(option);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar respuestas:', error);
+            mostrarAlerta('error', 'Error al cargar opciones de respuesta');
+        });
+}
 
 // ===== FUNCIONES EXTERNAS =====
 function validarCamposTexto() {
@@ -1351,66 +1775,147 @@ function mostrarErrorCampo(mensaje) {
     });
 }
 
-function cargarDetallesRequerimiento(idRegistro) {
-    console.log('Cargando detalles para registro:', idRegistro);
-    
-    // Mostrar indicador de carga
-    document.getElementById('info-paciente-detalles').style.display = 'none';
-    document.getElementById('info-requerimiento-detalles').style.display = 'none';
-    
-    // Hacer petición AJAX para obtener los detalles
-    fetch(`/requerimiento/detalles/${idRegistro}`)
-        .then(response => response.json())
-        .then(data => {
-            console.log('Datos recibidos:', data);
-            if (data.success) {
-                // Cargar información del paciente
-                document.getElementById('detalles-rut').textContent = data.paciente.rut;
-                document.getElementById('detalles-nombre').textContent = data.paciente.nombre;
-                document.getElementById('detalles-sexo').textContent = data.paciente.sexo;
-                document.getElementById('detalles-comuna').textContent = data.paciente.comuna;
-                document.getElementById('detalles-servicio').textContent = data.paciente.servicio_salud;
-                document.getElementById('info-paciente-detalles').style.display = 'block';
-                
-                // Cargar información del requerimiento
-                document.getElementById('detalles-fecha-requerimiento').textContent = data.requerimiento.fecha_formateada;
-                document.getElementById('detalles-responsable').textContent = data.requerimiento.responsable;
-                document.getElementById('detalles-categoria').textContent = data.requerimiento.categoria;
-                document.getElementById('detalles-requerimiento').textContent = data.requerimiento.requerimiento;
-                document.getElementById('detalles-emisor').textContent = data.requerimiento.emisor;
-                document.getElementById('detalles-entidad').textContent = data.requerimiento.entidad;
+    function cargarDetallesRequerimiento(idRegistro) {
+        console.log('Cargando detalles para registro:', idRegistro);
+        
+        // Mostrar indicador de carga
+        document.getElementById('info-paciente-detalles').style.display = 'none';
+        document.getElementById('info-requerimiento-detalles').style.display = 'none';
+        
+        // Hacer petición AJAX para obtener los detalles
+        fetch(`/requerimiento/detalles/${idRegistro}`)
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+            .then(data => {
+                console.log('Datos recibidos:', data);
+                if (data.success) {
+                    // Cargar información del paciente
+                    document.getElementById('detalles-rut').textContent = data.paciente.rut;
+                    document.getElementById('detalles-nombre').textContent = data.paciente.nombre;
+                    document.getElementById('detalles-sexo').textContent = data.paciente.sexo;
+                    document.getElementById('detalles-comuna').textContent = data.paciente.comuna;
+                    document.getElementById('detalles-servicio').textContent = data.paciente.servicio_salud;
+                    document.getElementById('info-paciente-detalles').style.display = 'block';
+                    
+                    // Cargar información del requerimiento
+                    document.getElementById('detalles-fecha-requerimiento').textContent = data.requerimiento.fecha_formateada;
+                    document.getElementById('detalles-responsable').textContent = data.requerimiento.responsable;
+                    document.getElementById('detalles-categoria').textContent = data.requerimiento.categoria;
+                    document.getElementById('detalles-requerimiento').textContent = data.requerimiento.requerimiento;
+                    document.getElementById('detalles-emisor').textContent = data.requerimiento.emisor;
+                    document.getElementById('detalles-entidad').textContent = data.requerimiento.entidad;
                 document.getElementById('detalles-resolucion-caso').textContent = data.requerimiento.resolucion_caso;
-                document.getElementById('detalles-fecha-proxima-revision').textContent = data.requerimiento.fecha_proxima_revision_formateada;
+                                document.getElementById('detalles-fecha-proxima-revision').textContent = data.requerimiento.fecha_proxima_revision_formateada;
                 document.getElementById('detalles-observaciones').textContent = data.requerimiento.observaciones;
+                
+                // Actualizar estado del requerimiento
+                const estadoElement = document.getElementById('detalles-estado');
+                if (data.requerimiento.esta_cerrado) {
+                    estadoElement.innerHTML = '<span class="badge bg-danger">CERRADO</span>';
+                } else {
+                    estadoElement.innerHTML = '<span class="badge bg-success">EN GESTIÓN</span>';
+                }
+                
                 document.getElementById('info-requerimiento-detalles').style.display = 'block';
                 
-                // Asignar el ID del registro al botón de agregar gestión
+                // Asignar el ID del registro a los botones
                 document.getElementById('btn-agregar-gestion').setAttribute('data-id', idRegistro);
+                document.getElementById('btn-cerrar-requerimiento').setAttribute('data-id', idRegistro);
                 
-                // Mostrar el modal
-                var modal = new bootstrap.Modal(document.getElementById('modalDetallesRequerimiento'));
-                modal.show();
-            } else {
+                // Verificar si el requerimiento está cerrado y bloquear botones
+                const estaCerrado = data.requerimiento.esta_cerrado;
+                const btnAgregarGestion = document.getElementById('btn-agregar-gestion');
+                const btnCerrarRequerimiento = document.getElementById('btn-cerrar-requerimiento');
+                
+                if (estaCerrado) {
+                    // Deshabilitar botón agregar gestión
+                    btnAgregarGestion.disabled = true;
+                    btnAgregarGestion.classList.remove('btn-primary');
+                    btnAgregarGestion.classList.add('btn-secondary');
+                    btnAgregarGestion.title = 'No se pueden agregar gestiones. El requerimiento está cerrado.';
+                    
+                    // Deshabilitar botón cerrar requerimiento
+                    btnCerrarRequerimiento.disabled = true;
+                    btnCerrarRequerimiento.classList.remove('btn-danger');
+                    btnCerrarRequerimiento.classList.add('btn-secondary');
+                    btnCerrarRequerimiento.title = 'El requerimiento ya está cerrado.';
+                    
+                    // Cambiar el texto del botón cerrar para indicar que ya está cerrado
+                    btnCerrarRequerimiento.innerHTML = '<i class="fas fa-lock me-1"></i>Requerimiento Cerrado';
+                } else {
+                    // Habilitar botón agregar gestión (siempre disponible si no está cerrado)
+                    btnAgregarGestion.disabled = false;
+                    btnAgregarGestion.classList.remove('btn-secondary');
+                    btnAgregarGestion.classList.add('btn-primary');
+                    btnAgregarGestion.title = 'Agregar nueva gestión';
+                    
+                    // El botón cerrar se habilitará/deshabilitará según las gestiones (lógica existente)
+                    btnCerrarRequerimiento.innerHTML = '<i class="fas fa-lock me-1"></i>Cerrar Requerimiento';
+                }
+                
+                                // Cargar historial de gestiones
+                cargarGestionesRequerimiento(idRegistro);
+                
+                // Mostrar el modal solo si no está ya abierto
+                const modalElement = document.getElementById('modalDetallesRequerimiento');
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                
+                if (!modalInstance || !modalElement.classList.contains('show')) {
+                    // El modal no está abierto, lo abrimos
+                    var modal = new bootstrap.Modal(modalElement);
+                    modal.show();
+                }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.mensaje || 'No se pudieron cargar los detalles del requerimiento',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar detalles:', error);
                 Swal.fire({
                     icon: 'error',
-                    title: 'Error',
-                    text: data.mensaje || 'No se pudieron cargar los detalles del requerimiento',
+                    title: 'Error de conexión',
+                    text: 'No se pudieron cargar los detalles del requerimiento',
                     confirmButtonText: 'OK',
                     confirmButtonColor: '#3085d6'
+                });
+                });
+            }
+
+// Función para cargar opciones de cierre en el modal
+function cargarOpcionesCierre() {
+    fetch('/cierres/opciones')
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('cierre-select');
+            select.innerHTML = '<option value="">Seleccione el tipo de cierre</option>';
+            
+            if (data.success && data.cierres) {
+                data.cierres.forEach(cierre => {
+                    const option = document.createElement('option');
+                    option.value = cierre.id_cierre_requerimiento;
+                    option.textContent = cierre.catalogo_cierre;
+                    select.appendChild(option);
                 });
             }
         })
         .catch(error => {
-            console.error('Error al cargar detalles:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error de conexión',
-                text: 'No se pudieron cargar los detalles del requerimiento',
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#3085d6'
-            });
+            console.error('Error al cargar opciones de cierre:', error);
+            mostrarAlerta('error', 'Error al cargar opciones de cierre');
         });
 }
-</script>
+
+
+    </script>
 
 @endsection

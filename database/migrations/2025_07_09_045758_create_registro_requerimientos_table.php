@@ -19,7 +19,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_responsable');
             $table->unsignedBigInteger('id_entidad');
             $table->unsignedBigInteger('id_emisor');
-            $table->unsignedBigInteger('id_cierre_requerimiento');
+            $table->unsignedBigInteger('id_cierre_requerimiento')->nullable();
             $table->date('fecha')->nullable();
             $table->date('fecha_proxima_revision')->nullable();
             $table->text('observaciones')->nullable();

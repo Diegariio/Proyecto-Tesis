@@ -74,3 +74,7 @@ Route::get('/requerimiento/diagnostico-resolucion/{id}', [GestionCasosOncologico
 Route::post('/gestion-requerimiento/guardar', [GestionCasosOncologicosController::class, 'guardarGestionRequerimiento']);
 Route::get('/gestiones/opciones', [GestionCasosOncologicosController::class, 'opcionesGestion']);
 Route::get('/respuestas/opciones', [GestionCasosOncologicosController::class, 'opcionesRespuesta']);
+Route::get('/requerimiento/{id}/gestiones', [GestionCasosOncologicosController::class, 'obtenerGestionesRequerimiento']);
+Route::post('/gestion-requerimiento/actualizar-respuesta', [GestionCasosOncologicosController::class, 'actualizarRespuestaGestion']);
+Route::get('/cierres/opciones', [GestionCasosOncologicosController::class, 'opcionesCierre']);
+Route::post('/requerimiento/cerrar', [GestionCasosOncologicosController::class, 'cerrarRequerimiento']);

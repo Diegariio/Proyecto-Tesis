@@ -14,6 +14,8 @@ use App\Models\EmisorRequerimiento;
 use App\Models\Tiene;
 use App\Models\GestionRequerimiento;
 use App\Models\ResolucionComite;
+use App\Models\Gestion;
+use App\Models\Respuesta;
 
 class GestionCasosOncologicosController extends Controller
 {
@@ -318,7 +320,8 @@ public function obtenerDetallesRequerimiento($idRegistro)
             'responsable',
             'requerimiento',
             'entidad',
-            'emisor'
+            'emisor',
+            'cierre'
         ])->find($idRegistro);
         
         if (!$registro) {
@@ -345,9 +348,11 @@ public function obtenerDetallesRequerimiento($idRegistro)
             'requerimiento' => $registro->requerimiento ? $registro->requerimiento->requerimiento : 'N/A',
             'emisor' => $registro->emisor ? $registro->emisor->catalogo : 'N/A',
             'entidad' => $registro->entidad ? $registro->entidad->catalogo : 'N/A',
-            'resolucion_caso' => '', // Si tienes este campo, puedes llenarlo aquí
+            'resolucion_caso' => $registro->cierre ? $registro->cierre->catalogo_cierre ?? 'N/A' : '------', // Mostrar cierre si existe
             'fecha_proxima_revision_formateada' => $registro->fecha_proxima_revision ? \Carbon\Carbon::parse($registro->fecha_proxima_revision)->format('d/m/Y') : 'N/A',
             'observaciones' => $registro->observaciones ?? 'N/A',
+            'esta_cerrado' => $registro->id_cierre_requerimiento !== null, // Información sobre si está cerrado
+            'id_cierre_requerimiento' => $registro->id_cierre_requerimiento, // ID del cierre si existe
         ];
         
         return response()->json([
@@ -437,7 +442,7 @@ public function guardarGestionRequerimiento(Request $request)
 
 public function opcionesGestion()
 {
-    $gestiones = \App\Models\Gestion::all(['id_gestion', 'gestion']);
+    $gestiones = Gestion::all(['id_gestion', 'gestion']);
     
     return response()->json([
         'success' => true,
@@ -447,7 +452,7 @@ public function opcionesGestion()
 
 public function opcionesRespuesta()
 {
-    $respuestas = \App\Models\Respuesta::all(['id_respuesta', 'catalogo_respuestas']);
+    $respuestas = Respuesta::all(['id_respuesta', 'catalogo_respuestas']);
     
     // Mapear el campo para que el frontend reciba 'respuesta'
     $respuestasFormateadas = $respuestas->map(function($respuesta) {
@@ -461,5 +466,173 @@ public function opcionesRespuesta()
         'success' => true,
         'respuestas' => $respuestasFormateadas
     ]);
+}
+
+public function obtenerGestionesRequerimiento($idRegistroRequerimiento)
+{
+    try {
+        $gestiones = \App\Models\GestionRequerimiento::where('id_registro_requerimiento', $idRegistroRequerimiento)
+            ->with(['gestion:id_gestion,gestion', 'respuesta:id_respuesta,catalogo_respuestas'])
+            ->orderBy('fecha_gestion', 'desc')
+            ->get();
+
+        $gestionesFormateadas = $gestiones->map(function($gestion) {
+            return [
+                'id_gestion_requerimiento' => $gestion->id_gestion_requerimiento,
+                'estado_gestion' => $gestion->estado_gestion,
+                'fecha_gestion' => $gestion->fecha_gestion ? \Carbon\Carbon::parse($gestion->fecha_gestion)->format('Y-m-d') : '',
+                'fecha_gestion_formateada' => $gestion->fecha_gestion ? \Carbon\Carbon::parse($gestion->fecha_gestion)->format('d/m/Y') : 'N/A',
+                'gestion' => $gestion->gestion ? $gestion->gestion->gestion : 'N/A',
+                'respuesta' => $gestion->respuesta ? $gestion->respuesta->catalogo_respuestas : null,
+                'respuesta_texto' => $gestion->respuesta ? $gestion->respuesta->catalogo_respuestas : null,
+                'tiene_respuesta' => $gestion->tieneRespuesta()
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'gestiones' => $gestionesFormateadas
+        ]);
+
+    } catch (\Exception $e) {
+        \Log::error('Error al obtener gestiones: ' . $e->getMessage());
+        return response()->json([
+            'success' => false, 
+            'message' => 'Error al cargar las gestiones: ' . $e->getMessage()
+        ]);
+    }
+}
+
+public function actualizarRespuestaGestion(Request $request)
+{
+    try {
+        // Validar los datos de entrada
+        $request->validate([
+            'id_gestion_requerimiento' => 'required|integer',
+            'id_respuesta' => 'required|integer'
+        ]);
+
+        $idGestionRequerimiento = $request->input('id_gestion_requerimiento');
+        $idRespuesta = $request->input('id_respuesta');
+
+        // Buscar la gestión de requerimiento
+        $gestionRequerimiento = \App\Models\GestionRequerimiento::find($idGestionRequerimiento);
+        if (!$gestionRequerimiento) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Gestión de requerimiento no encontrada'
+            ]);
+        }
+
+        // Actualizar la respuesta
+        $gestionRequerimiento->id_respuesta = $idRespuesta;
+        $saved = $gestionRequerimiento->save();
+
+        \Log::info('Respuesta actualizada para gestión:', [
+            'id_gestion_requerimiento' => $idGestionRequerimiento,
+            'id_respuesta' => $idRespuesta,
+            'guardado_exitoso' => $saved,
+            'tiene_respuesta_despues' => $gestionRequerimiento->tieneRespuesta()
+        ]);
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Respuesta añadida correctamente'
+        ]);
+
+    } catch (\Exception $e) {
+        \Log::error('Error al actualizar respuesta: ' . $e->getMessage());
+        return response()->json([
+            'success' => false, 
+            'message' => 'Error interno del servidor: ' . $e->getMessage()
+        ]);
+    }
+}
+
+public function opcionesCierre()
+{
+    $cierres = \App\Models\CierreRequerimiento::all(['id_cierre_requerimiento', 'catalogo_cierre']);
+    
+    return response()->json([
+        'success' => true,
+        'cierres' => $cierres
+    ]);
+}
+
+public function cerrarRequerimiento(Request $request)
+{
+    try {
+        // Validar los datos de entrada
+        $request->validate([
+            'id_registro_requerimiento' => 'required|integer',
+            'id_cierre_requerimiento' => 'required|integer|exists:cierre_requerimiento,id_cierre_requerimiento',
+            'observaciones_cierre' => 'nullable|string|max:1000'
+        ]);
+
+        $idRegistro = $request->input('id_registro_requerimiento');
+        $idCierre = $request->input('id_cierre_requerimiento');
+        $observacionesCierre = $request->input('observaciones_cierre');
+
+        // Buscar el registro de requerimiento
+        $registro = \App\Models\RegistroRequerimiento::find($idRegistro);
+        if (!$registro) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Registro de requerimiento no encontrado'
+            ]);
+        }
+
+        // Verificar que no esté ya cerrado
+        if ($registro->id_cierre_requerimiento !== null) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Este requerimiento ya está cerrado'
+            ]);
+        }
+
+        // Verificar que todas las gestiones tengan respuesta
+        $gestionesSinRespuesta = \App\Models\GestionRequerimiento::where('id_registro_requerimiento', $idRegistro)
+            ->whereNull('id_respuesta')
+            ->count();
+
+        if ($gestionesSinRespuesta > 0) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'No se puede cerrar el requerimiento. Hay gestiones sin respuesta.'
+            ]);
+        }
+
+        // Cerrar el requerimiento
+        $registro->id_cierre_requerimiento = $idCierre;
+        
+        // Si hay observaciones de cierre, las agregamos a las observaciones existentes
+        if ($observacionesCierre) {
+            $observacionesActuales = $registro->observaciones;
+            $nuevasObservaciones = $observacionesActuales ? 
+                $observacionesActuales . "\n\n--- CIERRE ---\n" . $observacionesCierre :
+                "--- CIERRE ---\n" . $observacionesCierre;
+            $registro->observaciones = $nuevasObservaciones;
+        }
+        
+        $registro->save();
+
+        \Log::info('Requerimiento cerrado:', [
+            'id_registro_requerimiento' => $idRegistro,
+            'id_cierre_requerimiento' => $idCierre,
+            'observaciones_cierre' => $observacionesCierre
+        ]);
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Requerimiento cerrado correctamente'
+        ]);
+
+    } catch (\Exception $e) {
+        \Log::error('Error al cerrar requerimiento: ' . $e->getMessage());
+        return response()->json([
+            'success' => false, 
+            'message' => 'Error interno del servidor: ' . $e->getMessage()
+        ]);
+    }
 }
 }

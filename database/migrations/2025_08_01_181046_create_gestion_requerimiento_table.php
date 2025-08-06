@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id('id_gestion_requerimiento');
             $table->unsignedBigInteger('id_registro_requerimiento');
             $table->unsignedBigInteger('id_gestion');
-            $table->unsignedBigInteger('id_respuesta');
+            $table->unsignedBigInteger('id_respuesta')->nullable();
             $table->string('estado_gestion')->default('PENDIENTE');
             $table->date('fecha_gestion');
             $table->timestamps();
@@ -23,7 +23,7 @@ return new class extends Migration
             // Foreign keys
             $table->foreign('id_registro_requerimiento')->references('id_registro_requerimiento')->on('registro_requerimiento')->onDelete('cascade');
             $table->foreign('id_gestion')->references('id_gestion')->on('gestion')->onDelete('cascade');
-            $table->foreign('id_respuesta')->references('id_respuesta')->on('respuestas')->onDelete('cascade');
+            $table->foreign('id_respuesta')->references('id_respuesta')->on('respuestas')->onDelete('set null');
         });
     }
 

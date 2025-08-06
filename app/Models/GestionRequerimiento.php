@@ -36,4 +36,10 @@ class GestionRequerimiento extends Model
     {
         return $this->belongsTo(Respuesta::class, 'id_respuesta');
     }
+    
+    // Verificar si tiene respuesta
+    public function tieneRespuesta()
+    {
+        return $this->id_respuesta !== null;
+    }
 }
