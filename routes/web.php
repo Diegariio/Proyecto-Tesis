@@ -9,6 +9,7 @@ use App\Models\CodigoTratamiento;
 use App\Models\CodigoGES;
 use App\Models\QuimioterapiaConcominante;
 use App\Http\Controllers\RegistroTratamientoRadioterapiaController;
+use App\Http\Controllers\BusquedaPacientesRadioterapiaController;
 
 use App\Models\EstadoProceso;
 use App\Models\Categoria;
@@ -24,26 +25,16 @@ Route::get('/', function () {
     return view('home');
 });
 
-Route::get('/registroTratamientoRadioterapia', function () {
-    $diagnosticos = Diagnostico::all(); // o ->orderBy('nombre')->get()
-    $zonas = ZonaIrradiada::all(); // o ->orderBy('nombre')->get()
-    $equipos = EquipoTratamiento::all(); // o ->orderBy('nombre')->get()
-    $radioterapeutas = Radioterapeuta::all(); // o ->orderBy('nombre')->get()
-    $codigosTratamiento = CodigoTratamiento::all(); // o ->orderBy('nombre')->get()
-    $codigosGes = CodigoGES::all(); // o ->orderBy('nombre')->get()
-    $quimioterapias = QuimioterapiaConcominante::all(); // o ->orderBy('nombre')->get()
-    return view('tratamientos.registroTratamientoRadioterapia', compact(
-        'diagnosticos',
-        'zonas',
-        'equipos',
-        'radioterapeutas',
-        'codigosTratamiento',
-        'codigosGes',
-        'quimioterapias'
-    ));
-});
 
+// Rutas para registro de tratamiento
+Route::get('/registroTratamientoRadioterapia', [RegistroTratamientoRadioterapiaController::class, 'create'])->name('registro-tratamiento.create');
 Route::post('/registroTratamientoRadioterapia', [RegistroTratamientoRadioterapiaController::class, 'store'])->name('registro-tratamiento.store');
+Route::post('/validar-rut', [RegistroTratamientoRadioterapiaController::class, 'validarRut'])->name('validar-rut');
+Route::post('/obtener-datos-paciente', [RegistroTratamientoRadioterapiaController::class, 'obtenerDatosPaciente'])->name('obtener-datos-paciente');
+
+// Rutas para búsqueda de pacientes
+Route::get('/busqueda-pacientes', [BusquedaPacientesRadioterapiaController::class, 'index'])->name('busqueda-pacientes.index');
+Route::post('/busqueda-pacientes/validar-rut', [BusquedaPacientesRadioterapiaController::class, 'validarRut'])->name('busqueda-pacientes.validar-rut');
 
 
 Route::get('/gestionCasosOncologicos', [GestionCasosOncologicosController::class, 'gestionCasosOncologicos'])->name('gestionCasosOncologicos');
