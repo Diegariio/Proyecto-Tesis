@@ -12,7 +12,7 @@ class Paciente extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ['rut', 'nombre', 'primer_apellido', 'segundo_apellido', 'id_comuna', 'id_sexo', 'id_servicio'];
+    protected $fillable = ['rut', 'numero_archivo', 'nombre', 'primer_apellido', 'segundo_apellido', 'edad', 'id_comuna', 'id_sexo', 'id_servicio'];
 
     public function comuna()
     {

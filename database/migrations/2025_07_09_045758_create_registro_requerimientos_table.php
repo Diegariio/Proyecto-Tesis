@@ -20,6 +20,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_entidad');
             $table->unsignedBigInteger('id_emisor');
             $table->unsignedBigInteger('id_cierre_requerimiento')->nullable();
+            $table->string('estado', 20)->default('sin gestiones'); // Estado del requerimiento
             $table->date('fecha')->nullable();
             $table->date('fecha_proxima_revision')->nullable();
             $table->text('observaciones')->nullable();

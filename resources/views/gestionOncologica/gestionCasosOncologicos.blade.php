@@ -121,9 +121,9 @@
 
                             <!-- Botones de acción -->
             <div class="d-flex flex-wrap gap-2 mt-4">
-                    <button type="submit" class="btn btn-primary">
+                                    <button type="submit" class="btn btn-primary">
                     <i class="fas fa-filter"></i> Filtrar
-                    </button>
+                </button>
                 
                 <button type="button" class="btn btn-secondary" id="btn-limpiar-filtros">
                     <i class="fas fa-eraser"></i> Limpiar
@@ -137,104 +137,115 @@
         </div>
     </div>
 
-    @if($resultados->count() > 0)
-    <!-- TÍTULO DE RESULTADOS -->
-        <div class="card mt-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">
-                <i class="fas fa-search me-2"></i>
-                Resultados de la búsqueda ({{ $resultados->count() }} registros encontrados)
-            </h5>
-        </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover text-nowrap mb-0">
-                        <thead>
+<!-- TABLA SIEMPRE VISIBLE -->
+<div class="card mt-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover text-nowrap mb-0">
+                <thead>
+                    <tr>
+                        <th>Acciones</th>
+                        <th>RUT Paciente</th>
+                        <th>Paciente</th>
+                        <th>Diagnóstico</th>
+                        <th>Fecha Requerimiento</th>
+                        <th>Fecha Próxima Revisión</th>
+                        <th>Estado</th>
+                        <th>Requerimiento</th>
+                        <th>Responsable</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if(isset($resultados) && $resultados->count() > 0)
+                        @foreach($resultados as $index => $registro)
+                        <tr>
+                            <td>
+                                <button class="btn btn-secondary btn-sm btn-ver-detalles" 
+                                        title="Ver detalles" 
+                                        data-id="{{ $registro->id_registro_requerimiento }}">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                            <td>{{ $registro->paciente->rut ?? 'N/A' }}</td>
+                            <td>
+                                {{ $registro->paciente->nombre ?? '' }} 
+                                {{ $registro->paciente->primer_apellido ?? '' }} 
+                                {{ $registro->paciente->segundo_apellido ?? '' }}
+                            </td>
+                            <td>
+                                @if($registro->codigo)
+                                    {{ $registro->codigo->codigo_cie10 ?? '' }} - 
+                                    {{ $registro->codigo->descripcion ?? '' }}
+                                @else
+                                    N/A
+                                @endif
+                            </td>
+                            <td>{{ $registro->created_at ? $registro->created_at->format('d/m/Y') : 'N/A' }}</td>
+                            <td>
+                                @if($registro->fecha_proxima_revision)
+                                    @php
+                                        $fecha = \Carbon\Carbon::parse($registro->fecha_proxima_revision);
+                                        $hoy = \Carbon\Carbon::now();
+                                        $diasRestantes = $hoy->diffInDays($fecha, false);
+                                    @endphp
+                                    <span class="{{ $diasRestantes <= 7 ? 'text-danger fw-bold' : ($diasRestantes <= 14 ? 'text-warning' : 'text-success') }}">
+                                        {{ $fecha->format('d/m/Y') }}
+                                        @if($diasRestantes <= 7)
+                                            <i class="fas fa-exclamation-triangle ms-1" title="Revisión próxima"></i>
+                                        @endif
+                                    </span>
+                                @else
+                                    N/A
+                                @endif
+                            </td>
+                            <td>
+                                @php
+                                    $estado = $registro->estado_actual;
+                                @endphp
+                                @if($estado == 'cerrado')
+                                    <span class="badge bg-danger">CERRADO</span>
+                                @elseif($estado == 'gestiones en curso')
+                                    <span class="badge bg-primary">GESTIONES EN CURSO</span>
+                                @else
+                                    <span class="badge bg-secondary">SIN GESTIONES</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($registro->requerimiento)
+                                    {{ $registro->requerimiento->requerimiento ?? 'N/A' }}
+                                @else
+                                    N/A (ID: {{ $registro->id_requerimiento }})
+                                @endif
+                            </td>
+                            <td>
+                                @if($registro->responsable)
+                                    {{ $registro->responsable->responsable ?? 'N/A' }}
+                                @else
+                                    N/A (ID: {{ $registro->id_responsable }})
+                                @endif
+                            </td>
+                        </tr>
+                        @endforeach
+                    @else
+                        @php
+                            $hayFiltros = request()->hasAny(['fecha-desde', 'fecha-hasta', 'fecha-proxima-revision', 'rut-paciente', 'nombres', 'primer-apellido', 'segundo-apellido', 'categoria', 'cie10', 'entidad', 'requerimiento', 'responsable', 'numero-archivo']);
+                        @endphp
+                        
+                        @if($hayFiltros)
                             <tr>
-                                <th>Acciones</th>
-                                <th>RUT Paciente</th>
-                                <th>Nombre Paciente</th>
-                                <th>Diagnóstico</th>
-                                <th>Fecha Requerimiento</th>
-                            <th>Fecha Próxima Revisión</th>
-                                <th>Requerimiento</th>
-                                <th>Responsable</th>
+                                <td colspan="9" class="text-center text-muted">No se encontraron registros que coincidan con los filtros aplicados</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($resultados as $index => $registro)
+                        @else
                             <tr>
-                                <td>
-                                    <button class="btn btn-secondary btn-sm btn-ver-detalles" 
-                                            title="Ver detalles" 
-                                            data-id="{{ $registro->id_registro_requerimiento }}">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </td>
-                                        <td>{{ $registro->paciente->rut ?? 'N/A' }}</td>
-                                <td>
-                                    {{ $registro->paciente->nombre ?? '' }} 
-                                    {{ $registro->paciente->primer_apellido ?? '' }} 
-                                    {{ $registro->paciente->segundo_apellido ?? '' }}
-                                </td>
-                                <td>
-                                    @if($registro->codigo)
-                                        {{ $registro->codigo->codigo_cie10 ?? '' }} - 
-                                        {{ $registro->codigo->descripcion ?? '' }}
-                                    @else
-                                        N/A
-                                    @endif
-                                </td>
-                                <td>{{ $registro->created_at ? $registro->created_at->format('d/m/Y') : 'N/A' }}</td>
-                                <td>
-                                    @if($registro->fecha_proxima_revision)
-                                        @php
-                                            $fecha = \Carbon\Carbon::parse($registro->fecha_proxima_revision);
-                                            $hoy = \Carbon\Carbon::now();
-                                            $diasRestantes = $hoy->diffInDays($fecha, false);
-                                        @endphp
-                                        <span class="{{ $diasRestantes <= 7 ? 'text-danger fw-bold' : ($diasRestantes <= 14 ? 'text-warning' : 'text-success') }}">
-                                            {{ $fecha->format('d/m/Y') }}
-                                            @if($diasRestantes <= 7)
-                                                <i class="fas fa-exclamation-triangle ms-1" title="Revisión próxima"></i>
-                                            @endif
-                                        </span>
-                                    @else
-                                        N/A
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($registro->requerimiento)
-                                        {{ $registro->requerimiento->requerimiento ?? 'N/A' }}
-                                    @else
-                                        N/A (ID: {{ $registro->id_requerimiento }})
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($registro->responsable)
-                                        {{ $registro->responsable->responsable ?? 'N/A' }}
-                                    @else
-                                        N/A (ID: {{ $registro->id_responsable }})
-                                    @endif
-                                </td>
-                                    </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-    </div>
-@else
-    <!-- MENSAJE CUANDO NO HAY RESULTADOS -->
-    <div class="card mt-4">
-        <div class="card-body">
-            <div class="alert alert-info mb-0">
-                <i class="fas fa-info-circle me-2"></i>
-                No se encontraron registros con los filtros aplicados.
-            </div>
+                                <td colspan="9" class="text-center text-muted">Utilice los filtros de búsqueda para consultar los casos oncológicos</td>
+                            </tr>
+                        @endif
+                    @endif
+                </tbody>
+            </table>
         </div>
     </div>
-@endif
+</div>
 <div class="modal fade" id="modalRequerimiento" tabindex="-1" aria-labelledby="modalRequerimientoLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl"> <!-- Cambiado a modal-xl -->
     <div class="modal-content shadow-lg"> <!-- Sombra extra -->
@@ -245,7 +256,7 @@
       <div class="modal-body">
                 <!-- Aquí van los recuadros de información y el formulario -->
 <div id="info-paciente-modal" class="card mb-3" style="display: none;">
-    <div class="card-header bg-primary text-white">
+    <div class="card-header bg-info text-white">
         <h6 class="mb-0">
             <i class="fas fa-user me-2"></i>
             Ficha del Paciente
@@ -305,7 +316,7 @@
         </div>
     @endif
 
-<h5 class="mb-3 text-primary">
+<h5 class="mb-3 text-info">
     <i class="fas fa-file-medical me-2"></i>
     Registro del Requerimiento
 </h5>
@@ -420,7 +431,7 @@
       <div class="modal-body">
         <!-- Ficha del Paciente -->
         <div id="info-paciente-detalles" class="card mb-3" style="display: none;">
-          <div class="card-header bg-primary text-white">
+          <div class="card-header bg-info text-white">
             <h6 class="mb-0">
               <i class="fas fa-user me-2"></i>
               Ficha del Paciente
@@ -555,7 +566,6 @@
                   <thead>
                     <tr>
                       <th>Acción</th>
-                      <th>Estado de la Gestión</th>
                       <th>Fecha Gestión</th>
                       <th>Gestión</th>
                       <th>Respuesta</th>
@@ -579,7 +589,7 @@
   <div class="modal-dialog modal-sm modal-dialog-centered">
     <div class="modal-content">
       <form id="form-agregar-gestion">
-        <div class="modal-header bg-primary text-white">
+        <div class="modal-header bg-info text-white">
           <h5 class="modal-title" id="modalAgregarGestionLabel">Registrar Gestión Realizada</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
@@ -660,11 +670,6 @@
             <select name="id_cierre_requerimiento" id="cierre-select" class="form-select" required>
               <option value="">Seleccione el tipo de cierre</option>
             </select>
-          </div>
-          
-          <div class="mb-3">
-            <label for="observaciones-cierre" class="form-label">Observaciones de Cierre (Opcional)</label>
-            <textarea name="observaciones_cierre" id="observaciones-cierre" class="form-control" rows="3" placeholder="Ingrese observaciones adicionales sobre el cierre..."></textarea>
           </div>
         </div>
         <div class="modal-footer">
@@ -830,6 +835,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function mostrarExito() {
     grut.className = 'form-group col-md-3';
     const input = rutInput;
+    input.classList.remove('is-invalid');
     input.classList.add('is-valid');
     iconrut.style.display = 'block';
     iconrut.className = 'fas fa-check text-success';
@@ -838,6 +844,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function mostrarError(mensaje) {
     grut.className = 'form-group col-md-3';
     const input = rutInput;
+    input.classList.remove('is-valid');
     input.classList.add('is-invalid');
     iconrut.style.display = 'block';
     iconrut.className = 'fas fa-times text-danger';
@@ -1277,6 +1284,9 @@ function restaurarTodosLosCie10() {
                 
                 // Recargar historial de gestiones
                 cargarGestionesRequerimiento(idRequerimientoActual);
+                
+                // Recargar los detalles del requerimiento para actualizar el estado en tiempo real
+                cargarDetallesRequerimiento(idRequerimientoActual);
             } else {
                 let mensaje = data.message || 'Error al guardar la gestión';
                 
@@ -1426,7 +1436,7 @@ function restaurarTodosLosCie10() {
                         const idRegistro = document.getElementById('form-cerrar-requerimiento').getAttribute('data-id');
                         if (idRegistro) {
                             // Recargar la información del requerimiento usando la función existente
-                            mostrarDetalles(idRegistro);
+                            cargarDetallesRequerimiento(idRegistro);
                         }
                         
                     } else {
@@ -1518,10 +1528,6 @@ function llenarTablaGestiones(gestiones) {
             accionTd.innerHTML = '<span class="text-muted">—</span>';
         }
         
-        // Columna Estado
-        const estadoTd = document.createElement('td');
-        estadoTd.innerHTML = obtenerBadgeEstado(gestion.estado_gestion);
-        
         // Columna Fecha
         const fechaTd = document.createElement('td');
         fechaTd.textContent = gestion.fecha_gestion_formateada;
@@ -1535,7 +1541,6 @@ function llenarTablaGestiones(gestiones) {
         respuestaTd.textContent = gestion.respuesta || gestion.respuesta_texto || '—';
         
         fila.appendChild(accionTd);
-        fila.appendChild(estadoTd);
         fila.appendChild(fechaTd);
         fila.appendChild(gestionTd);
         fila.appendChild(respuestaTd);
@@ -1566,24 +1571,6 @@ function llenarTablaGestiones(gestiones) {
                 }
             }
         }
-    }
-}
-
-function obtenerBadgeEstado(estado) {
-    switch(estado?.toUpperCase()) {
-        case 'ACTIVO':
-            return '<span class="badge text-bg-success"><small>ACTIVO</small></span>';
-        case 'PENDIENTE':
-            return '<span class="badge text-bg-warning"><small>PENDIENTE</small></span>';
-        case 'INACTIVO':
-            return '<span class="badge text-bg-danger"><small>INACTIVO</small></span>';
-        case 'EN PROCESO':
-            return '<span class="badge text-bg-primary"><small>EN PROCESO</small></span>';
-        case 'REVISIÓN':
-        case 'REVISION':
-            return '<span class="badge text-bg-info"><small>REVISIÓN</small></span>';
-        default:
-            return '<span class="badge text-bg-secondary"><small>SIN ESTADO</small></span>';
     }
 }
 
@@ -1815,11 +1802,19 @@ function mostrarErrorCampo(mensaje) {
                 
                 // Actualizar estado del requerimiento
                 const estadoElement = document.getElementById('detalles-estado');
-                if (data.requerimiento.esta_cerrado) {
-                    estadoElement.innerHTML = '<span class="badge bg-danger">CERRADO</span>';
-                } else {
-                    estadoElement.innerHTML = '<span class="badge bg-success">EN GESTIÓN</span>';
+                let badge = '';
+                switch ((data.requerimiento.estado_actual || '').toLowerCase()) {
+                  case 'cerrado':
+                    badge = '<span class="badge bg-danger">CERRADO</span>';
+                    break;
+                  case 'gestiones en curso':
+                    badge = '<span class="badge bg-primary">GESTIONES EN CURSO</span>';
+                    break;
+                  case 'sin gestiones':
+                  default:
+                    badge = '<span class="badge bg-secondary">SIN GESTIONES</span>';
                 }
+                estadoElement.innerHTML = badge;
                 
                     document.getElementById('info-requerimiento-detalles').style.display = 'block';
                     
@@ -1913,6 +1908,17 @@ function cargarOpcionesCierre() {
             console.error('Error al cargar opciones de cierre:', error);
             mostrarAlerta('error', 'Error al cargar opciones de cierre');
         });
+}
+
+// ===== RECARGA DE PÁGINA AL CERRAR MODAL PRINCIPAL =====
+// Event listener para cuando se cierre el modal principal de detalles
+const modalDetallesElement = document.getElementById('modalDetallesRequerimiento');
+if (modalDetallesElement) {
+    modalDetallesElement.addEventListener('hidden.bs.modal', function () {
+        // Recargar la página para actualizar la tabla principal con los cambios de estado
+        console.log('Modal principal cerrado, recargando página...');
+        window.location.reload();
+    });
 }
 
 

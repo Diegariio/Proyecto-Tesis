@@ -20,7 +20,26 @@ class RegistroRequerimiento extends Model
         'fecha',
         'fecha_proxima_revision',
         'observaciones',
+        'estado', // nuevo campo
     ];
+
+    // Estado calculado dinámicamente
+    public function getEstadoActualAttribute()
+    {
+        if ($this->id_cierre_requerimiento) {
+            return 'cerrado';
+        }
+        if ($this->gestiones()->count() > 0) {
+            return 'gestiones en curso';
+        }
+        return 'sin gestiones';
+    }
+
+    // Relación con gestiones
+    public function gestiones()
+    {
+        return $this->hasMany(\App\Models\GestionRequerimiento::class, 'id_registro_requerimiento');
+    }
 
     public function paciente()
     {

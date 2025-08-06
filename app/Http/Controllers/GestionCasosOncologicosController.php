@@ -47,6 +47,7 @@ class GestionCasosOncologicosController extends Controller
             'fecha-hasta' => 'nullable|date|after_or_equal:fecha-desde',
             'fecha-proxima-revision' => 'nullable|date',
             'rut-paciente' => 'nullable|regex:/^[0-9]{1,2}\.[0-9]{3}\.[0-9]{3}-[0-9kK]$/',
+            'numero-archivo' => 'nullable|string|max:8',
             'nombres' => 'nullable|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/|min:2|max:50',
             'primer-apellido' => 'nullable|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s-]+$/|min:2|max:50',
             'segundo-apellido' => 'nullable|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s-]+$/|min:2|max:50',
@@ -65,7 +66,8 @@ class GestionCasosOncologicosController extends Controller
             'requerimiento',
             'categoria',
             'entidad',
-            'emisor'
+            'emisor',
+            'gestiones'       // Necesario para calcular el estado_actual
         ]);
     
         // Filtro por RUT (prioridad alta)
@@ -91,8 +93,12 @@ class GestionCasosOncologicosController extends Controller
                 $pacientesQuery->where('segundo_apellido', 'LIKE', '%' . $request->input('segundo-apellido') . '%');
             }
             
+            if ($request->filled('numero-archivo')) {
+                $pacientesQuery->where('numero_archivo', 'LIKE', '%' . $request->input('numero-archivo') . '%');
+            }
+            
             // Si se aplicaron filtros de nombres, obtener los RUTs
-            if ($request->filled('nombres') || $request->filled('primer-apellido') || $request->filled('segundo-apellido')) {
+            if ($request->filled('nombres') || $request->filled('primer-apellido') || $request->filled('segundo-apellido') || $request->filled('numero-archivo')) {
                 $rutsEncontrados = $pacientesQuery->pluck('rut');
                 
                 if ($rutsEncontrados->count() > 0) {
@@ -102,7 +108,7 @@ class GestionCasosOncologicosController extends Controller
                     $query->where('rut', 'INEXISTENTE');
                 }
             }
-}
+        }
     
         // Filtros por fechas de creación
         if ($request->filled('fecha-desde')) {
@@ -138,18 +144,50 @@ class GestionCasosOncologicosController extends Controller
             $query->where('id_requerimiento', $request->input('requerimiento'));
         }
     
-        // NUEVO: Filtro por responsable
+        // Filtro por responsable
         if ($request->filled('responsable')) {
             $query->where('id_responsable', $request->input('responsable'));
         }
     
-        $resultados = $query->get();
+        // Solo ejecutar la consulta si hay algún filtro aplicado (restaurar funcionalidad original)
+        $hayFiltros = $request->filled('fecha-desde') || 
+                      $request->filled('fecha-hasta') || 
+                      $request->filled('fecha-proxima-revision') || 
+                      $request->filled('rut-paciente') ||
+                      $request->filled('nombres') || 
+                      $request->filled('primer-apellido') || 
+                      $request->filled('segundo-apellido') || 
+                      $request->filled('categoria') || 
+                      $request->filled('cie10') ||
+                      $request->filled('entidad') || 
+                      $request->filled('requerimiento') || 
+                      $request->filled('responsable') || 
+                      $request->filled('numero-archivo');
+        
+        \Log::info('DEBUG - Filtros aplicados:', [
+            'hayFiltros' => $hayFiltros,
+            'rut-paciente' => $request->input('rut-paciente'),
+            'rut-paciente_filled' => $request->filled('rut-paciente')
+        ]);
+        
+        if ($hayFiltros) {
+            $resultados = $query->get();
+            \Log::info('DEBUG - Consulta ejecutada:', [
+                'sql' => $query->toSql(),
+                'bindings' => $query->getBindings(),
+                'resultados_count' => $resultados->count()
+            ]);
+        } else {
+            $resultados = collect(); // Colección vacía cuando no hay RUT
+            \Log::info('DEBUG - Sin RUT aplicado, devolviendo colección vacía');
+        }
     
         // Debugging mejorado
         $debugData = [
-            'sql' => $query->toSql(),
-            'bindings' => $query->getBindings(),
+            'sql' => $hayFiltros ? $query->toSql() : 'No se ejecutó consulta - sin filtros',
+            'bindings' => $hayFiltros ? $query->getBindings() : [],
             'request_data' => $request->all(),
+            'hay_filtros' => $hayFiltros,
             'resultados_count' => $resultados->count(),
             'primer_registro' => $resultados->first() ? [
                 'id' => $resultados->first()->id,
@@ -215,7 +253,7 @@ class GestionCasosOncologicosController extends Controller
             'mensaje' => 'RUT válido',
             'paciente' => [
                 'nombre' => $paciente->nombre,
-                'apellidos' => $paciente->apellidos
+                'apellidos' => $paciente->primer_apellido . ' ' . $paciente->segundo_apellido
             ]
         ]);
     }
@@ -353,6 +391,7 @@ public function obtenerDetallesRequerimiento($idRegistro)
             'observaciones' => $registro->observaciones ?? 'N/A',
             'esta_cerrado' => $registro->id_cierre_requerimiento !== null, // Información sobre si está cerrado
             'id_cierre_requerimiento' => $registro->id_cierre_requerimiento, // ID del cierre si existe
+            'estado_actual' => $registro->estado_actual, // Estado calculado
         ];
         
         return response()->json([
@@ -565,13 +604,11 @@ public function cerrarRequerimiento(Request $request)
         // Validar los datos de entrada
         $request->validate([
             'id_registro_requerimiento' => 'required|integer',
-            'id_cierre_requerimiento' => 'required|integer|exists:cierre_requerimiento,id_cierre_requerimiento',
-            'observaciones_cierre' => 'nullable|string|max:1000'
+            'id_cierre_requerimiento' => 'required|integer|exists:cierre_requerimiento,id_cierre_requerimiento'
         ]);
 
         $idRegistro = $request->input('id_registro_requerimiento');
         $idCierre = $request->input('id_cierre_requerimiento');
-        $observacionesCierre = $request->input('observaciones_cierre');
 
         // Buscar el registro de requerimiento
         $registro = \App\Models\RegistroRequerimiento::find($idRegistro);
@@ -604,22 +641,11 @@ public function cerrarRequerimiento(Request $request)
 
         // Cerrar el requerimiento
         $registro->id_cierre_requerimiento = $idCierre;
-        
-        // Si hay observaciones de cierre, las agregamos a las observaciones existentes
-        if ($observacionesCierre) {
-            $observacionesActuales = $registro->observaciones;
-            $nuevasObservaciones = $observacionesActuales ? 
-                $observacionesActuales . "\n\n--- CIERRE ---\n" . $observacionesCierre :
-                "--- CIERRE ---\n" . $observacionesCierre;
-            $registro->observaciones = $nuevasObservaciones;
-        }
-        
         $registro->save();
 
         \Log::info('Requerimiento cerrado:', [
             'id_registro_requerimiento' => $idRegistro,
-            'id_cierre_requerimiento' => $idCierre,
-            'observaciones_cierre' => $observacionesCierre
+            'id_cierre_requerimiento' => $idCierre
         ]);
 
         return response()->json([

@@ -34,13 +34,18 @@
             <div class="row g-3 mb-3">
                 <div class="col-md-6">
                     <label for="rut_paciente" class="form-label">RUT Paciente</label>
+                    <div class="position-relative">
                     <input type="text" id="rut_paciente" name="rut_paciente" class="form-control"
-                           value="{{ request('rut_paciente') }}" placeholder="Ingrese RUT">
+                               value="{{ request('rut_paciente') }}" placeholder="Ingrese RUT" maxlength="12">
+                        <div class="position-absolute top-0 end-0 h-100 d-flex align-items-center pe-3">
+                            <i class="fas fa-check text-success" id="icon-rut-tratamiento" style="display: none;"></i>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <label for="numero_archivo" class="form-label">N° Archivo</label>
                     <input type="text" id="numero_archivo" name="numero_archivo" class="form-control"
-                           value="{{ request('numero_archivo') }}" placeholder="Ingrese N° archivo">
+                           value="{{ request('numero_archivo') }}" placeholder="12345678"maxlength="8">
                 </div>
             </div>
 
@@ -89,11 +94,130 @@
                     <i class="fas fa-eraser"></i> Limpiar
                 </button>
                 
-                <button type="button" class="btn btn-success" id="btn-agregar-tratamiento" onclick="abrirModalTratamiento()" disabled style="opacity: 0.5; pointer-events: none;">
-                    <i class="fas fa-plus-circle"></i> Agregar indicación de tratamiento oncológico
-                </button>
+
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Modal: Opciones de Tratamiento Oncológico -->
+<div class="modal fade" id="modalTratamientosOncologicos" tabindex="-1" aria-labelledby="modalTratamientosOncologicosLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width: 90%;">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTratamientosOncologicosLabel">Registro Clínico de Tratamiento Oncológico</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row g-4">
+                            <!-- Quimioterapia - No disponible -->
+                            <div class="col-md-6 col-lg-4">
+                                <button type="button" 
+                                        class="btn btn-outline-primary text-uppercase fw-bold w-100 py-4 d-flex flex-column justify-content-center h-100 disabled"
+                                        role="button" aria-disabled="true">
+                                    QUIMIOTERAPIA
+                                    <span class="text-secondary fw-normal small mt-1">No disponible</span>
+                                </button>
+                            </div>
+
+                            <!-- Radioterapia - Activo -->
+                            <div class="col-md-6 col-lg-4">
+                                <button type="button" 
+                                        class="btn btn-outline-primary text-uppercase fw-bold w-100 py-4 d-flex flex-column justify-content-center h-100"
+                                        onclick="abrirModalRadioterapia()">
+                                    RADIOTERAPIA
+                                </button>
+                            </div>
+
+                            <!-- Inmunoterapia - No disponible -->
+                            <div class="col-md-6 col-lg-4">
+                                <button type="button" 
+                                        class="btn btn-outline-primary text-uppercase fw-bold w-100 py-4 d-flex flex-column justify-content-center h-100 disabled"
+                                        role="button" aria-disabled="true">
+                                    INMUNOTERAPIA
+                                    <span class="text-secondary fw-normal small mt-1">No disponible</span>
+                                </button>
+                            </div>
+
+                            <!-- Hormonoterapia - No disponible -->
+                            <div class="col-md-6 col-lg-4">
+                                <button type="button" 
+                                        class="btn btn-outline-primary text-uppercase fw-bold w-100 py-4 d-flex flex-column justify-content-center h-100 disabled"
+                                        role="button" aria-disabled="true">
+                                    HORMONOTERAPIA
+                                    <span class="text-secondary fw-normal small mt-1">No disponible</span>
+                                </button>
+                            </div>
+
+                            <!-- Braquiterapia - No disponible -->
+                            <div class="col-md-6 col-lg-4">
+                                <button type="button" 
+                                        class="btn btn-outline-primary text-uppercase fw-bold w-100 py-4 d-flex flex-column justify-content-center h-100 disabled"
+                                        role="button" aria-disabled="true">
+                                    BRAQUITERAPIA
+                                    <span class="text-secondary fw-normal small mt-1">No disponible</span>
+                                </button>
+                            </div>
+
+                            <!-- Cuidados Paliativos - No disponible -->
+                            <div class="col-md-6 col-lg-4">
+                                <button type="button" 
+                                        class="btn btn-outline-primary text-uppercase fw-bold w-100 py-4 d-flex flex-column justify-content-center h-100 disabled"
+                                        role="button" aria-disabled="true">
+                                    CUIDADOS PALIATIVOS
+                                    <span class="text-secondary fw-normal small mt-1">No disponible</span>
+                                </button>
+                            </div>
+
+                            <!-- Terapia Blanco - No disponible -->
+                            <div class="col-md-6 col-lg-4">
+                                <button type="button" 
+                                        class="btn btn-outline-primary text-uppercase fw-bold w-100 py-4 d-flex flex-column justify-content-center h-100 disabled"
+                                        role="button" aria-disabled="true">
+                                    TERAPIA BLANCO
+                                    <span class="text-secondary fw-normal small mt-1">No disponible</span>
+                                </button>
+                            </div>
+
+                            <!-- Yodo Terapia - No disponible -->
+                            <div class="col-md-6 col-lg-4">
+                                <button type="button" 
+                                        class="btn btn-outline-primary text-uppercase fw-bold w-100 py-4 d-flex flex-column justify-content-center h-100 disabled"
+                                        role="button" aria-disabled="true">
+                                    YODO TERAPIA
+                                    <span class="text-secondary fw-normal small mt-1">No disponible</span>
+                                </button>
+                            </div>
+
+                            <!-- Cirugía Oncológica - No disponible -->
+                            <div class="col-md-6 col-lg-4">
+                                <button type="button" 
+                                        class="btn btn-outline-primary text-uppercase fw-bold w-100 py-4 d-flex flex-column justify-content-center h-100 disabled"
+                                        role="button" aria-disabled="true">
+                                    CIRUGÍA ONCOLÓGICA
+                                    <span class="text-secondary fw-normal small mt-1">No disponible</span>
+                                </button>
+                            </div>
+
+                            <!-- Cirugía No Oncológica - No disponible -->
+                            <div class="col-md-6 col-lg-4">
+                                <button type="button" 
+                                        class="btn btn-outline-primary text-uppercase fw-bold w-100 py-4 d-flex flex-column justify-content-center h-100 disabled"
+                                        role="button" aria-disabled="true">
+                                    CIRUGÍA NO ONCOLÓGICA
+                                    <span class="text-secondary fw-normal small mt-1">No disponible</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -282,37 +406,41 @@
                         <th>RUT</th>
                         <th>Paciente</th>
                         <th>N° Archivo</th>
-                        <th>Fecha Inicio</th>
-                        <th>Diagnostico CIE10</th>
-                        <th>Zona a Irradiar</th>
+                        <th>Sexo</th>
+                        <th>Tratamientos</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @if(isset($pacientes) && $pacientes->count() > 0)
+                                        @if(isset($pacientes) && $pacientes->count() > 0)
                         @foreach($pacientes as $paciente)
-                            <tr>
-                                <td>
-                                    <button class="btn btn-outline-info btn-sm" onclick="verDetalles('{{ $paciente['rut'] }}')" title="Ver detalles">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </td>
+                    <tr>
+                        <td>
+                                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTratamientosOncologicos" 
+                                            title="Ver Tratamientos" onclick="window.rutPacienteSeleccionado = '{{ $paciente['rut'] }}';">
+                                        <i class="fas fa-address-book"></i>
+                            </button>
+                        </td>
                                 <td>{{ $paciente['rut'] }}</td>
                                 <td>{{ $paciente['paciente'] }}</td>
                                 <td>{{ $paciente['n_archivo'] }}</td>
-                                <td>{{ $paciente['fecha_inicio'] }}</td>
-                                <td>{{ $paciente['cie10'] }}</td>
-                                <td>{{ $paciente['zona'] }}</td>
-                            </tr>
+                                <td>{{ $paciente['sexo'] }}</td>
+                                <td>
+                                    <span class="badge bg-secondary" data-bs-toggle="tooltip" data-bs-placement="left" 
+                                          title="Funcionalidad pendiente" style="cursor: not-allowed;">
+                                        <small>VER</small>
+                                    </span>
+                                </td>
+                    </tr>
                         @endforeach
                     @else
                         @if(request()->hasAny(['fecha_ingreso_inicio', 'fecha_ingreso_fin', 'rut_paciente', 'nombres', 'primer_apellido', 'segundo_apellido', 'numero_archivo']))
                             <tr>
-                                <td colspan="7" class="text-center text-muted">No se encontraron resultados para los filtros aplicados</td>
-                            </tr>
+                                <td colspan="6" class="text-center text-muted">No se encontraron resultados para los filtros aplicados</td>
+                    </tr>
                         @else
                             <tr>
-                                <td colspan="7" class="text-center text-muted">Utilice los filtros para buscar pacientes</td>
-                            </tr>
+                                <td colspan="6" class="text-center text-muted">Utilice los filtros para buscar pacientes</td>
+                    </tr>
                         @endif
                     @endif
                 </tbody>
@@ -484,6 +612,115 @@
 </div>
 
 <script>
+// ===== FUNCIÓN PARA FORMATEAR RUT =====
+function formatRut(input) {
+    let value = input.value.replace(/\D/g, '');
+    if (value.length > 1) {
+        const cuerpo = value.slice(0, -1);
+        const dv = value.slice(-1);
+        let formatted = '';
+        let reversed = cuerpo.split('').reverse().join('');
+        for (let i = 0; i < reversed.length; i++) {
+            if (i !== 0 && i % 3 === 0) {
+                formatted = '.' + formatted;
+            }
+            formatted = reversed[i] + formatted;
+        }
+        input.value = formatted + '-' + dv;
+    } else {
+        input.value = value;
+    }
+}
+
+// ===== FUNCIÓN PARA LIMPIAR FORMULARIO =====
+function limpiarFormulario() {
+    // Limpiar todos los campos del formulario
+    document.getElementById('fecha_ingreso_inicio').value = '';
+    document.getElementById('fecha_ingreso_fin').value = '';
+    document.getElementById('rut_paciente').value = '';
+    document.getElementById('numero_archivo').value = '';
+    document.getElementById('nombres').value = '';
+    document.getElementById('primer_apellido').value = '';
+    document.getElementById('segundo_apellido').value = '';
+    
+    // Limpiar validaciones de RUT
+    const rutInput = document.getElementById('rut_paciente');
+    if (rutInput) {
+        rutInput.classList.remove('is-valid', 'is-invalid');
+    }
+    
+    // Recargar la página sin parámetros
+    window.location.href = window.location.pathname;
+}
+
+// ===== FUNCIÓN PARA ABRIR MODAL DE RADIOTERAPIA =====
+function abrirModalRadioterapia() {
+    // Cerrar el modal de opciones de tratamiento
+    const modalTratamientos = bootstrap.Modal.getInstance(document.getElementById('modalTratamientosOncologicos'));
+    if (modalTratamientos) {
+        modalTratamientos.hide();
+    }
+    
+    // Esperar un poco para que se cierre el modal anterior
+    setTimeout(() => {
+        // Usar el RUT del paciente seleccionado desde la tabla
+        if (window.rutPacienteSeleccionado) {
+            const rut = window.rutPacienteSeleccionado;
+            console.log('RUT seleccionado para radioterapia:', rut);
+            
+            // Validar que el RUT existe (aunque ya viene de la tabla)
+            if (!rut || rut.trim() === '') {
+                mostrarAlerta('error', 'No se pudo obtener el RUT del paciente seleccionado.');
+                return;
+            }
+
+            // Realizar petición AJAX para obtener datos del paciente
+            fetch('/obtener-datos-paciente', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ rut: rut })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Respuesta del servidor:', data);
+                if (data.success) {
+                    const paciente = data.paciente;
+                
+                    // Llenar información del paciente en el modal
+                    document.getElementById('modal-indicacion-rut').textContent = rut;
+                    document.getElementById('modal-indicacion-nombre').textContent = paciente.nombre + ' ' + paciente.primer_apellido + ' ' + paciente.segundo_apellido;
+                    document.getElementById('modal-indicacion-sexo').textContent = paciente.sexo ? paciente.sexo.sexo : 'N/A';
+                    document.getElementById('modal-indicacion-comuna').textContent = paciente.comuna ? paciente.comuna.nombre : 'N/A';
+                    document.getElementById('modal-indicacion-servicio').textContent = paciente.servicio_salud ? paciente.servicio_salud.nombre : 'N/A';
+                    
+                    // Establecer el RUT en el campo oculto
+                    document.getElementById('rut_paciente_modal').value = rut;
+                    
+                    // Limpiar el formulario
+                    document.getElementById('form-indicacion-tratamiento').reset();
+                    document.getElementById('rut_paciente_modal').value = rut; // Mantener el RUT después del reset
+                    
+                    // Abrir el modal de indicación de tratamiento
+                    const modalIndicacion = new bootstrap.Modal(document.getElementById('modalIndicacionTratamiento'));
+                    modalIndicacion.show();
+                } else {
+                    mostrarAlerta('error', data.message || 'No se pudieron obtener los datos del paciente.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarAlerta('error', 'Error al obtener los datos del paciente. Por favor, intente nuevamente.');
+            });
+        } else {
+            mostrarAlerta('error', 'No se ha seleccionado ningún paciente.');
+        }
+    }, 300); // Esperar 300ms para que se cierre el modal anterior
+}
+
+// ===== CONFIGURACIÓN DE EVENTOS DOM =====
 document.addEventListener('DOMContentLoaded', function() {
     // Validación de fechas
     const fechaIngresoInicio = document.getElementById('fecha_ingreso_inicio');
@@ -505,166 +742,100 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Habilitar botón solo si RUT está completo
+    // Formateo de RUT para filtros de búsqueda
     const rutInput = document.getElementById('rut_paciente');
-    const btnAgregar = document.getElementById('btn-agregar-tratamiento');
-
-    function checkRutField() {
-        if (rutInput.value.trim() !== '') {
-            btnAgregar.disabled = false;
-            btnAgregar.style.opacity = 1;
-            btnAgregar.style.pointerEvents = 'auto';
-        } else {
-            btnAgregar.disabled = true;
-            btnAgregar.style.opacity = 0.5;
-            btnAgregar.style.pointerEvents = 'none';
-        }
-    }
-
-    // Formateo de RUT
+    const iconRutTratamiento = document.getElementById('icon-rut-tratamiento');
+    let rutValidadoTratamiento = false;
+    let timeoutRutTratamiento;
+    
     if (rutInput) {
         rutInput.addEventListener('input', function (e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 1) {
-                const cuerpo = value.slice(0, -1);
-                const dv = value.slice(-1);
-                let formatted = '';
-                let reversed = cuerpo.split('').reverse().join('');
-                for (let i = 0; i < reversed.length; i++) {
-                    if (i !== 0 && i % 3 === 0) {
-                        formatted = '.' + formatted;
-                    }
-                    formatted = reversed[i] + formatted;
-                }
-                e.target.value = formatted + '-' + dv;
+            formatRut(e.target);
+            
+            // Resetear validación cuando cambia el RUT
+            rutValidadoTratamiento = false;
+            resetearEstiloRutTratamiento();
+            
+            // Validación después de 1 segundo de inactividad
+            clearTimeout(timeoutRutTratamiento);
+            timeoutRutTratamiento = setTimeout(() => {
+                validarRutTratamiento(e.target.value);
+            }, 1000);
+        });
+
+        // Validación de RUT en tiempo real para búsqueda
+        rutInput.addEventListener('blur', function() {
+        if (rutInput.value.trim() !== '') {
+                validarRutTratamiento(rutInput.value);
             } else {
-                e.target.value = value;
+                resetearEstiloRutTratamiento();
             }
-            // Verificar estado del botón después de formatear
-            checkRutField();
         });
     }
     
-    // Verificar estado inicial
-    checkRutField();
-
-    // Validación de RUT en tiempo real
-    const rutFeedback = document.createElement('div');
-    rutFeedback.className = 'invalid-feedback';
-    rutInput.parentNode.appendChild(rutFeedback);
-
-    rutInput.addEventListener('blur', function() {
-        if (rutInput.value.trim() !== '') {
-            fetch('/validar-rut', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({ rut: rutInput.value })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.valido) {
-                    rutInput.classList.remove('is-invalid');
-                    rutInput.classList.add('is-valid');
-                    rutFeedback.style.display = 'none';
-                } else {
-                    rutInput.classList.remove('is-valid');
-                    rutInput.classList.add('is-invalid');
-                    rutFeedback.textContent = data.mensaje;
-                    rutFeedback.style.display = 'block';
-                    
-                    // Mostrar error con SweetAlert
-                    mostrarAlerta('error', data.mensaje);
-                }
-            });
-        } else {
-            rutInput.classList.remove('is-valid', 'is-invalid');
-            rutFeedback.style.display = 'none';
+    // ===== FUNCIONES DE VALIDACIÓN DE RUT PARA TRATAMIENTO =====
+    function validarRutTratamiento(rut) {
+        if (rut.length < 8) {
+            resetearEstiloRutTratamiento();
+            rutValidadoTratamiento = false;
+            return;
         }
-    });
-});
-
-function limpiarFormulario() {
-    // Limpiar todos los campos del formulario
-    document.getElementById('fecha_ingreso_inicio').value = '';
-    document.getElementById('fecha_ingreso_fin').value = '';
-    document.getElementById('rut_paciente').value = '';
-    document.getElementById('numero_archivo').value = '';
-    document.getElementById('nombres').value = '';
-    document.getElementById('primer_apellido').value = '';
-    document.getElementById('segundo_apellido').value = '';
-    document.getElementById('ver_tratamientos').value = '';
-    
-    // Limpiar validaciones de RUT
-    const rutInput = document.getElementById('rut_paciente');
-    rutInput.classList.remove('is-valid', 'is-invalid');
-    const rutFeedback = rutInput.parentNode.querySelector('.invalid-feedback');
-    if (rutFeedback) {
-        rutFeedback.style.display = 'none';
+        
+        fetch('/validar-rut', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ rut: rut })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.valido) {
+                mostrarExitoRutTratamiento();
+                rutValidadoTratamiento = true;
+        } else {
+                mostrarErrorRutTratamiento();
+                rutValidadoTratamiento = false;
+                mostrarAlerta('error', data.mensaje);
+            }
+        })
+        .catch(error => {
+            console.error('Error validando RUT:', error);
+            mostrarErrorRutTratamiento();
+            rutValidadoTratamiento = false;
+        });
     }
     
-    // Recargar la página sin parámetros
-    window.location.href = window.location.pathname;
-}
-
-function verDetalles(rut) {
-    // Implementar funcionalidad para ver detalles del tratamiento
-    console.log('Ver detalles del paciente con RUT:', rut);
-    // Aquí puedes abrir un modal o redirigir a una página de detalles
-}
-
-function abrirModalTratamiento() {
-    const rutInput = document.getElementById('rut_paciente');
-    const rut = rutInput.value.trim();
-    
-    if (!rut) {
-        mostrarAlerta('error', 'Por favor, ingrese un RUT válido antes de agregar un tratamiento.');
-        return;
+    function mostrarExitoRutTratamiento() {
+        rutInput.classList.remove('is-invalid');
+        rutInput.classList.add('is-valid');
+        iconRutTratamiento.style.display = 'block';
+        iconRutTratamiento.className = 'fas fa-check text-success';
     }
     
-    // Cargar datos del paciente
-    fetch('/obtener-datos-paciente', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-        },
-        body: JSON.stringify({ rut: rut })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Llenar los datos del paciente en el modal
-            document.getElementById('modal-indicacion-rut').textContent = data.paciente.rut;
-            document.getElementById('modal-indicacion-nombre').textContent = data.paciente.nombre;
-            document.getElementById('modal-indicacion-sexo').textContent = data.paciente.sexo;
-            document.getElementById('modal-indicacion-comuna').textContent = data.paciente.comuna;
-            document.getElementById('modal-indicacion-servicio').textContent = data.paciente.servicio_salud;
-            
-            // Establecer el RUT en el campo oculto
-            document.getElementById('rut_paciente_modal').value = data.paciente.rut;
-            
-            // Limpiar el formulario
-            document.getElementById('form-indicacion-tratamiento').reset();
-            document.getElementById('rut_paciente_modal').value = data.paciente.rut;
-            
-            // Abrir el modal
-            const modal = new bootstrap.Modal(document.getElementById('modalIndicacionTratamiento'));
-            modal.show();
-        } else {
-            mostrarAlerta('error', data.mensaje);
+    function mostrarErrorRutTratamiento() {
+        rutInput.classList.remove('is-valid');
+        rutInput.classList.add('is-invalid');
+        iconRutTratamiento.style.display = 'block';
+        iconRutTratamiento.className = 'fas fa-times text-danger';
+    }
+    
+    function resetearEstiloRutTratamiento() {
+        rutInput.classList.remove('is-valid', 'is-invalid');
+        if (iconRutTratamiento) {
+            iconRutTratamiento.style.display = 'none';
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        mostrarAlerta('error', 'Error al obtener los datos del paciente');
-    });
-}
+    }
+    
+    // ===== VALIDACIÓN INICIAL DE RUT AL CARGAR LA PÁGINA =====
+    // Validar RUT si tiene valor al cargar la página (para mantener estado como en gestión de casos)
+    if (rutInput && rutInput.value.trim() !== '') {
+        console.log('Revalidando RUT al cargar página de tratamiento:', rutInput.value);
+        validarRutTratamiento(rutInput.value.trim());
+    }
 
-// Manejar el envío del formulario del modal
-document.addEventListener('DOMContentLoaded', function() {
+    // Manejar el envío del formulario del modal
     const formIndicacion = document.getElementById('form-indicacion-tratamiento');
     
     if (formIndicacion) {
@@ -739,53 +910,29 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    // ===== SWEETALERT DE ÉXITO CON BLADE =====
-    @if(session('success_alert'))
-        Swal.fire({
-            icon: 'success',
-            title: '¡Éxito!',
-            text: '{{ session('success_alert') }}',
-            confirmButtonText: 'Aceptar',
-            confirmButtonColor: '#00a65a',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            allowEnterKey: true,
-            customClass: {
-                popup: 'swal2-custom-popup',
-                title: 'swal2-custom-title',
-                content: 'swal2-custom-content',
-                confirmButton: 'swal2-custom-button'
-            }
-        });
-    @endif
-    
-    @if(session('error_alert'))
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: '{{ session('error_alert') }}',
-            confirmButtonText: 'Aceptar',
-            confirmButtonColor: '#3085d6',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            allowEnterKey: true,
-            customClass: {
-                popup: 'swal2-custom-popup',
-                title: 'swal2-custom-title',
-                content: 'swal2-custom-content',
-                confirmButton: 'swal2-custom-button'
-            }
-        });
-    @endif
 });
 
 // ===== FUNCIÓN GLOBAL PARA MOSTRAR ALERTAS =====
 function mostrarAlerta(tipo, mensaje) {
-    const icono = tipo === 'success' ? 'success' : 'error';
-    const titulo = tipo === 'success' ? '¡Éxito!' : 'Error';
-    const color = tipo === 'success' ? '#00a65a' : '#3085d6';
+    let icono, titulo, color;
     
+    switch(tipo) {
+        case 'success':
+            icono = 'success';
+            titulo = '¡Éxito!';
+            color = '#00a65a';
+            break;
+        case 'info':
+            icono = 'info';
+            titulo = 'Información';
+            color = '#17a2b8';
+            break;
+        default:
+            icono = 'error';
+            titulo = 'Error';
+            color = '#3085d6';
+    }
+
     Swal.fire({
         icon: icono,
         title: titulo,
@@ -831,5 +978,56 @@ function mostrarAlertaConCallback(tipo, mensaje, callback) {
         }
     });
 }
+
+// ===== INICIALIZACIÓN ADICIONAL AL CARGAR LA PÁGINA =====
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar tooltips si hay elementos con data-bs-toggle="tooltip"
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Mostrar alertas de sesión si existen
+    @if(session('success_alert'))
+        Swal.fire({
+            icon: 'success',
+            title: '¡Éxito!',
+            text: '{{ session('success_alert') }}',
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#00a65a',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            allowEnterKey: true,
+            customClass: {
+                popup: 'swal2-custom-popup',
+                title: 'swal2-custom-title',
+                content: 'swal2-custom-content',
+                confirmButton: 'swal2-custom-button'
+            }
+        });
+    @endif
+
+    @if(session('error_alert'))
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: '{{ session('error_alert') }}',
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#3085d6',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            allowEnterKey: true,
+            customClass: {
+                popup: 'swal2-custom-popup',
+                title: 'swal2-custom-title',
+                content: 'swal2-custom-content',
+                confirmButton: 'swal2-custom-button'
+            }
+        });
+    @endif
+});
 </script>
+
+
+
 @endsection

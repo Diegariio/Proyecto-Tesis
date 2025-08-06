@@ -27,90 +27,72 @@ class RegistroTratamientoRadioterapiaController extends Controller
             'numero_archivo' => 'nullable|string|max:50',
         ]);
 
-        // Iniciar la consulta base con las relaciones necesarias
-        $query = RegistroTratamientoRadioterapia::with([
-            'paciente.sexo',
-            'codigoGes',
-            'codigoTratamiento',
-            'zonaIrradiada',
-            'quimioterapia',
-            'codigoCie10'
-        ]);
-
-        // Solo buscar si hay filtros aplicados
-        $filtrosAplicados = $request->filled(['fecha_ingreso_inicio', 'fecha_ingreso_fin', 'rut_paciente', 
-                                           'nombres', 'primer_apellido', 'segundo_apellido', 'numero_archivo']);
-
+        // Buscar directamente en la tabla paciente con funcionalidad completa
         $pacientes = collect();
 
+        // Buscar si hay cualquier filtro aplicado (restaurar funcionalidad original)
+        $filtrosAplicados = $request->filled('fecha_ingreso_inicio') || 
+                           $request->filled('fecha_ingreso_fin') || 
+                           $request->filled('rut_paciente') || 
+                           $request->filled('nombres') || 
+                           $request->filled('primer_apellido') || 
+                           $request->filled('segundo_apellido') || 
+                           $request->filled('numero_archivo');
+
+        \Log::info('DEBUG - Filtros de tratamiento:', [
+            'filtrosAplicados' => $filtrosAplicados,
+            'request_data' => $request->all(),
+            'rut_paciente_filled' => $request->filled('rut_paciente'),
+            'nombres_filled' => $request->filled('nombres'),
+            'primer_apellido_filled' => $request->filled('primer_apellido'),
+            'segundo_apellido_filled' => $request->filled('segundo_apellido'),
+            'numero_archivo_filled' => $request->filled('numero_archivo')
+        ]);
+
         if ($filtrosAplicados) {
-            // Filtro por RUT (prioridad alta)
+            // Buscar directamente en la tabla paciente con las relaciones necesarias
+            $query = Paciente::with(['sexo', 'comuna', 'servicio']);
+
+            // Filtro por RUT (exacto)
             if ($request->filled('rut_paciente')) {
                 $query->where('rut', $request->input('rut_paciente'));
             }
-            // Filtros por nombres (cuando no hay RUT)
-            else {
-                $rutsEncontrados = collect();
-                
-                // Buscar pacientes por nombres
-                $pacientesQuery = Paciente::query();
-                
-                if ($request->filled('nombres')) {
-                    $pacientesQuery->where('nombre', 'LIKE', '%' . $request->input('nombres') . '%');
-                }
-                
-                if ($request->filled('primer_apellido')) {
-                    $pacientesQuery->where('primer_apellido', 'LIKE', '%' . $request->input('primer_apellido') . '%');
-                }
-                
-                if ($request->filled('segundo_apellido')) {
-                    $pacientesQuery->where('segundo_apellido', 'LIKE', '%' . $request->input('segundo_apellido') . '%');
-                }
 
-                if ($request->filled('numero_archivo')) {
-                    $pacientesQuery->where('n_archivo', 'LIKE', '%' . $request->input('numero_archivo') . '%');
-                }
-                
-                // Si se aplicaron filtros, obtener los RUTs
-                if ($request->filled('nombres') || $request->filled('primer_apellido') || 
-                    $request->filled('segundo_apellido') || $request->filled('numero_archivo')) {
-                    $rutsEncontrados = $pacientesQuery->pluck('rut');
-                    
-                    if ($rutsEncontrados->count() > 0) {
-                        $query->whereIn('rut', $rutsEncontrados);
-                    } else {
-                        // Si no se encontraron pacientes, retornar resultados vacíos
-                        $query->where('rut', 'INEXISTENTE');
-                    }
-                }
+            // Filtros por nombres (LIKE - búsqueda parcial)
+            if ($request->filled('nombres')) {
+                $query->where('nombre', 'LIKE', '%' . $request->input('nombres') . '%');
             }
 
-            // Filtros por fechas de inicio de tratamiento
-            if ($request->filled('fecha_ingreso_inicio')) {
-                $query->whereDate('fecha_inicio', '>=', $request->input('fecha_ingreso_inicio'));
+            if ($request->filled('primer_apellido')) {
+                $query->where('primer_apellido', 'LIKE', '%' . $request->input('primer_apellido') . '%');
             }
 
-            if ($request->filled('fecha_ingreso_fin')) {
-                $query->whereDate('fecha_inicio', '<=', $request->input('fecha_ingreso_fin'));
+            if ($request->filled('segundo_apellido')) {
+                $query->where('segundo_apellido', 'LIKE', '%' . $request->input('segundo_apellido') . '%');
+            }
+
+            if ($request->filled('numero_archivo')) {
+                $query->where('numero_archivo', 'LIKE', '%' . $request->input('numero_archivo') . '%');
             }
 
             $resultados = $query->get();
 
-            // Formatear resultados para la vista
-            $pacientes = $resultados->map(function($registro) {
+            // Formatear resultados para la vista (directamente desde paciente)
+            $pacientes = $resultados->map(function($paciente) {
                 return [
-                    'rut' => $registro->rut,
-                    'paciente' => $registro->paciente->nombre . ' ' . 
-                                $registro->paciente->primer_apellido . ' ' . 
-                                $registro->paciente->segundo_apellido,
-                    'n_archivo' => $registro->paciente->n_archivo,
-                    'sexo' => $registro->paciente->sexo ? $registro->paciente->sexo->sexo : 'N/A',
-                    'fecha_inicio' => $registro->fecha_inicio,
-                    'cie10' => $registro->codigoCie10 ? $registro->codigoCie10->codigo_cie10 : 'N/A',
-                    'zona' => $registro->zonaIrradiada ? $registro->zonaIrradiada->nombre : 'N/A',
-                    'id_registro' => $registro->id_registro_tratamiento
+                    'rut' => $paciente->rut,
+                    'paciente' => $paciente->nombre . ' ' . 
+                                $paciente->primer_apellido . ' ' . 
+                                $paciente->segundo_apellido,
+                    'n_archivo' => $paciente->numero_archivo,
+                    'sexo' => $paciente->sexo ? $paciente->sexo->sexo : 'N/A'
                 ];
-            })->unique('rut')->values();
+            });
+            
+            \Log::info('Resultados de búsqueda:', [
+                'total_pacientes' => $resultados->count(),
+                'primer_paciente' => $pacientes->first()
+            ]);
         }
 
         // Cargar datos para los selects del modal
